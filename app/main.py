@@ -15,7 +15,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
-    title="SortDesk — AI Recruiter Email Assistant API",
+    title="SortDesk - AI Recruiter Email Assistant API",
     description="SortDesk: AI-powered Gmail & Outlook agent for HR recruiters",
     version="1.0.0",
 )
