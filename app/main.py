@@ -38,25 +38,34 @@ app.include_router(queue_router)
 app.include_router(chat_router)
 app.include_router(candidates_router)
 
-LANDING_PATH = Path(__file__).resolve().parent / "templates" / "landing.html"
-DASHBOARD_PATH = Path(__file__).resolve().parent / "templates" / "dashboard.html"
+def _read_template(filename: str) -> str:
+    possible_paths = [
+        Path(__file__).resolve().parent / "templates" / filename,
+        Path.cwd() / "app" / "templates" / filename,
+        Path("/var/task/app/templates") / filename,
+        Path(__file__).resolve().parent.parent / "app" / "templates" / filename,
+    ]
+    for p in possible_paths:
+        if p.exists():
+            return p.read_text(encoding="utf-8")
+    return ""
 
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def sortdesk_landing():
     """Serves the SortDesk Product Landing Page."""
-    if LANDING_PATH.exists():
-        return HTMLResponse(content=LANDING_PATH.read_text(encoding="utf-8"))
-    if DASHBOARD_PATH.exists():
-        return HTMLResponse(content=DASHBOARD_PATH.read_text(encoding="utf-8"))
+    content = _read_template("landing.html") or _read_template("dashboard.html")
+    if content:
+        return HTMLResponse(content=content)
     return RedirectResponse(url="/docs")
 
 
 @app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
 async def sortdesk_dashboard():
     """Serves the SortDesk Recruiter Dashboard."""
-    if DASHBOARD_PATH.exists():
-        return HTMLResponse(content=DASHBOARD_PATH.read_text(encoding="utf-8"))
+    content = _read_template("dashboard.html")
+    if content:
+        return HTMLResponse(content=content)
     return RedirectResponse(url="/docs")
 
 
