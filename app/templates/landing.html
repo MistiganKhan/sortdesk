@@ -961,6 +961,13 @@
           err.innerText = "Your session has expired. Please sign in again.";
           err.classList.remove('hidden');
         }
+      } else if (urlParams.get('auth_error')) {
+        openAuthModal('login');
+        const err = document.getElementById('authErrorMsg');
+        if (err) {
+          err.innerText = decodeURIComponent(urlParams.get('auth_error'));
+          err.classList.remove('hidden');
+        }
       }
     });
 

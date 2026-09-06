@@ -145,8 +145,8 @@ def login_with_email(
     return {"user": user, "tokens": tokens}
 
 
-async def login_with_google(code: str, user_agent: str | None, ip_address: str | None) -> dict:
-    google_tokens = await exchange_code_for_google_tokens(code)
+async def login_with_google(code: str, user_agent: str | None, ip_address: str | None, redirect_uri: str | None = None) -> dict:
+    google_tokens = await exchange_code_for_google_tokens(code, redirect_uri=redirect_uri)
     google_access_token = google_tokens.get("access_token")
     if not google_access_token:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Google token exchange failed")
@@ -160,12 +160,12 @@ async def login_with_google(code: str, user_agent: str | None, ip_address: str |
     return {"user": user, "tokens": tokens}
 
 
-async def login_with_microsoft(code: str, user_agent: str | None, ip_address: str | None) -> dict:
+async def login_with_microsoft(code: str, user_agent: str | None, ip_address: str | None, redirect_uri: str | None = None) -> dict:
     from app.modules.outlook_integration.ms_oauth import (
         exchange_code_for_ms_login_tokens,
         get_ms_user_info,
     )
-    ms_tokens = await exchange_code_for_ms_login_tokens(code)
+    ms_tokens = await exchange_code_for_ms_login_tokens(code, redirect_uri=redirect_uri)
     access_token = ms_tokens.get("access_token")
     if not access_token:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Microsoft token exchange failed")

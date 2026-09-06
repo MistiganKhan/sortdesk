@@ -73,11 +73,12 @@ MS_LOGIN_SCOPES = [
 ]
 
 
-def build_ms_login_url(state: str) -> str:
+def build_ms_login_url(state: str, redirect_uri: str | None = None) -> str:
     """Builds Microsoft authorization URL specifically for signing in recruiters."""
+    client_id = settings.OUTLOOK_CLIENT_ID or "00000000-0000-0000-0000-000000000000"
     params = {
-        "client_id": settings.OUTLOOK_CLIENT_ID,
-        "redirect_uri": settings.MICROSOFT_REDIRECT_URI,
+        "client_id": client_id,
+        "redirect_uri": redirect_uri or settings.MICROSOFT_REDIRECT_URI,
         "response_type": "code",
         "response_mode": "query",
         "scope": " ".join(MS_LOGIN_SCOPES),
@@ -87,7 +88,7 @@ def build_ms_login_url(state: str) -> str:
     return f"{MS_AUTH_URL}?{urlencode(params)}"
 
 
-async def exchange_code_for_ms_login_tokens(code: str) -> dict:
+async def exchange_code_for_ms_login_tokens(code: str, redirect_uri: str | None = None) -> dict:
     """Exchanges code for access token using the auth callback redirect URI."""
     async with httpx.AsyncClient(timeout=10) as client:
         resp = await client.post(
@@ -96,7 +97,7 @@ async def exchange_code_for_ms_login_tokens(code: str) -> dict:
                 "client_id": settings.OUTLOOK_CLIENT_ID,
                 "client_secret": settings.OUTLOOK_CLIENT_SECRET,
                 "code": code,
-                "redirect_uri": settings.MICROSOFT_REDIRECT_URI,
+                "redirect_uri": redirect_uri or settings.MICROSOFT_REDIRECT_URI,
                 "grant_type": "authorization_code",
             },
         )

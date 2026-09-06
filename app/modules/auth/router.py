@@ -1,3 +1,4 @@
+from urllib.parse import quote
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 
@@ -63,28 +64,43 @@ async def sso_direct_login(body: SSORequest, request: Request):
 
 
 @router.get("/google/login")
-async def google_login():
+async def google_login(request: Request):
     if not settings.GOOGLE_CLIENT_ID or settings.GOOGLE_CLIENT_ID.startswith("placeholder"):
-        # Seamless local demo/trial mode fallback
-        res = service.login_with_sso_direct("google", None, None, None, None, None)
-        token = res["tokens"]["access_token"]
-        return RedirectResponse(f"/auth/callback#access_token={token}&provider=google")
+        err = "Google OAuth requires GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to be configured in your environment variables."
+        return RedirectResponse(f"/?auth_error={quote(err)}")
+
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme or "https"
+    redirect_uri = settings.GOOGLE_REDIRECT_URI
+    if host and "localhost" in host:
+        redirect_uri = f"{proto}://{host}/auth/google/callback"
+    elif host and "vercel.app" in host:
+        redirect_uri = f"https://{host}/auth/google/callback"
 
     state = generate_state()
-    return RedirectResponse(build_google_auth_url(state))
+    auth_url = build_google_auth_url(state, redirect_uri=redirect_uri)
+    return RedirectResponse(auth_url)
 
 
 @router.get("/microsoft/login")
-async def microsoft_login():
+async def microsoft_login(request: Request):
     if not settings.OUTLOOK_CLIENT_ID or settings.OUTLOOK_CLIENT_ID.startswith("placeholder"):
-        # Seamless local demo/trial mode fallback
-        res = service.login_with_sso_direct("microsoft", None, None, None, None, None)
-        token = res["tokens"]["access_token"]
-        return RedirectResponse(f"/auth/callback#access_token={token}&provider=microsoft")
+        err = "Microsoft OAuth requires OUTLOOK_CLIENT_ID and OUTLOOK_CLIENT_SECRET to be configured in your environment variables."
+        return RedirectResponse(f"/?auth_error={quote(err)}")
 
     from app.modules.outlook_integration.ms_oauth import build_ms_login_url
+
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme or "https"
+    redirect_uri = settings.MICROSOFT_REDIRECT_URI
+    if host and "localhost" in host:
+        redirect_uri = f"{proto}://{host}/auth/microsoft/callback"
+    elif host and "vercel.app" in host:
+        redirect_uri = f"https://{host}/auth/microsoft/callback"
+
     state = generate_state()
-    return RedirectResponse(build_ms_login_url(state))
+    auth_url = build_ms_login_url(state, redirect_uri=redirect_uri)
+    return RedirectResponse(auth_url)
 
 
 @router.get("/google/callback")
@@ -93,16 +109,24 @@ async def google_callback(request: Request, code: str, state: str):
     if not is_valid:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired OAuth state")
 
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme or "https"
+    redirect_uri = settings.GOOGLE_REDIRECT_URI
+    if host and "localhost" in host:
+        redirect_uri = f"{proto}://{host}/auth/google/callback"
+    elif host and "vercel.app" in host:
+        redirect_uri = f"https://{host}/auth/google/callback"
+
     result = await service.login_with_google(
         code=code,
+        redirect_uri=redirect_uri,
         user_agent=request.headers.get("user-agent"),
         ip_address=request.client.host if request.client else None,
     )
 
     tokens = result["tokens"]
     redirect_url = (
-        f"{settings.FRONTEND_URL}{settings.FRONTEND_OAUTH_SUCCESS_PATH}"
-        f"#access_token={tokens['access_token']}&refresh_token={tokens['refresh_token']}"
+        f"/auth/callback#access_token={tokens['access_token']}&refresh_token={tokens['refresh_token']}&provider=google"
     )
     return RedirectResponse(redirect_url)
 
@@ -113,16 +137,24 @@ async def microsoft_callback(request: Request, code: str, state: str):
     if not is_valid:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired OAuth state")
 
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme or "https"
+    redirect_uri = settings.MICROSOFT_REDIRECT_URI
+    if host and "localhost" in host:
+        redirect_uri = f"{proto}://{host}/auth/microsoft/callback"
+    elif host and "vercel.app" in host:
+        redirect_uri = f"https://{host}/auth/microsoft/callback"
+
     result = await service.login_with_microsoft(
         code=code,
+        redirect_uri=redirect_uri,
         user_agent=request.headers.get("user-agent"),
         ip_address=request.client.host if request.client else None,
     )
 
     tokens = result["tokens"]
     redirect_url = (
-        f"{settings.FRONTEND_URL}{settings.FRONTEND_OAUTH_SUCCESS_PATH}"
-        f"#access_token={tokens['access_token']}&refresh_token={tokens['refresh_token']}"
+        f"/auth/callback#access_token={tokens['access_token']}&refresh_token={tokens['refresh_token']}&provider=microsoft"
     )
     return RedirectResponse(redirect_url)
 

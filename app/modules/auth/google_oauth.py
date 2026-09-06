@@ -12,10 +12,10 @@ GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 LOGIN_SCOPES = ["openid", "email", "profile"]
 
 
-def build_google_auth_url(state: str) -> str:
+def build_google_auth_url(state: str, redirect_uri: str | None = None) -> str:
     params = {
         "client_id": settings.GOOGLE_CLIENT_ID,
-        "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+        "redirect_uri": redirect_uri or settings.GOOGLE_REDIRECT_URI,
         "response_type": "code",
         "scope": " ".join(LOGIN_SCOPES),
         "state": state,
@@ -25,7 +25,7 @@ def build_google_auth_url(state: str) -> str:
     return f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
 
 
-async def exchange_code_for_google_tokens(code: str) -> dict:
+async def exchange_code_for_google_tokens(code: str, redirect_uri: str | None = None) -> dict:
     async with httpx.AsyncClient(timeout=10) as client:
         resp = await client.post(
             GOOGLE_TOKEN_URL,
@@ -33,7 +33,7 @@ async def exchange_code_for_google_tokens(code: str) -> dict:
                 "code": code,
                 "client_id": settings.GOOGLE_CLIENT_ID,
                 "client_secret": settings.GOOGLE_CLIENT_SECRET,
-                "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+                "redirect_uri": redirect_uri or settings.GOOGLE_REDIRECT_URI,
                 "grant_type": "authorization_code",
             },
         )
