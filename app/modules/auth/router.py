@@ -82,18 +82,13 @@ async def microsoft_login():
         token = res["tokens"]["access_token"]
         return RedirectResponse(f"/auth/callback#access_token={token}&provider=microsoft")
 
-    from app.modules.outlook_integration.ms_oauth import build_outlook_auth_url
+    from app.modules.outlook_integration.ms_oauth import build_ms_login_url
     state = generate_state()
-    return RedirectResponse(build_outlook_auth_url(state))
+    return RedirectResponse(build_ms_login_url(state))
 
 
 @router.get("/google/callback")
 async def google_callback(request: Request, code: str, state: str):
-    # Unlike a stored-nonce approach, this state can be verified once and is
-    # then simply discarded - there's nothing to "delete" since nothing was
-    # ever stored. A replayed state is still only valid within its 10-minute
-    # TTL and requires the matching `code`, which Google invalidates after
-    # first use anyway.
     is_valid, _ = verify_state(state)
     if not is_valid:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired OAuth state")
@@ -110,6 +105,27 @@ async def google_callback(request: Request, code: str, state: str):
         f"#access_token={tokens['access_token']}&refresh_token={tokens['refresh_token']}"
     )
     return RedirectResponse(redirect_url)
+
+
+@router.get("/microsoft/callback")
+async def microsoft_callback(request: Request, code: str, state: str):
+    is_valid, _ = verify_state(state)
+    if not is_valid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired OAuth state")
+
+    result = await service.login_with_microsoft(
+        code=code,
+        user_agent=request.headers.get("user-agent"),
+        ip_address=request.client.host if request.client else None,
+    )
+
+    tokens = result["tokens"]
+    redirect_url = (
+        f"{settings.FRONTEND_URL}{settings.FRONTEND_OAUTH_SUCCESS_PATH}"
+        f"#access_token={tokens['access_token']}&refresh_token={tokens['refresh_token']}"
+    )
+    return RedirectResponse(redirect_url)
+
 
 
 @router.post("/refresh", response_model=TokenPair)

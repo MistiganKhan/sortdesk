@@ -160,6 +160,31 @@ async def login_with_google(code: str, user_agent: str | None, ip_address: str |
     return {"user": user, "tokens": tokens}
 
 
+async def login_with_microsoft(code: str, user_agent: str | None, ip_address: str | None) -> dict:
+    from app.modules.outlook_integration.ms_oauth import (
+        exchange_code_for_ms_login_tokens,
+        get_ms_user_info,
+    )
+    ms_tokens = await exchange_code_for_ms_login_tokens(code)
+    access_token = ms_tokens.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Microsoft token exchange failed")
+
+    userinfo = await get_ms_user_info(access_token)
+    email = userinfo.get("email")
+    if not email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Microsoft account has no valid email address")
+
+    user = repo.get_or_create_user(
+        email=email,
+        full_name=userinfo.get("name"),
+        company_name="Microsoft 365 Recruiter",
+    )
+    tokens = _issue_token_pair(user, user_agent, ip_address)
+    return {"user": user, "tokens": tokens}
+
+
+
 def refresh_tokens(raw_refresh_token: str, user_agent: str | None, ip_address: str | None) -> dict:
     token_hash = hash_refresh_token(raw_refresh_token)
     existing = repo.get_refresh_token_by_hash(token_hash)

@@ -27,10 +27,12 @@ class Settings(BaseSettings):
     GMAIL_REDIRECT_URI: str = "http://localhost:8000/gmail/callback"
     GMAIL_TOKEN_ENCRYPTION_KEY: str = "dGVzdC1mZXJuZXQta2V5LTEyMzQ1Njc4OWFiY2RlZjA="
 
-    # Outlook integration (Microsoft Graph)
+    # Outlook / Microsoft integration (Microsoft Graph)
     OUTLOOK_CLIENT_ID: str = ""
     OUTLOOK_CLIENT_SECRET: str = ""
     OUTLOOK_REDIRECT_URI: str = "http://localhost:8000/outlook/callback"
+    MICROSOFT_REDIRECT_URI: str = "http://localhost:8000/auth/microsoft/callback"
+
 
     # Redis (OAuth state storage here today; Celery broker later)
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -129,6 +131,14 @@ class Settings(BaseSettings):
         if not v or (isinstance(v, str) and not v.strip()):
             return "http://localhost:8000/outlook/callback"
         return str(v).strip()
+
+    @field_validator("MICROSOFT_REDIRECT_URI", mode="before")
+    @classmethod
+    def clean_microsoft_redirect_uri(cls, v: Any) -> str:
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "http://localhost:8000/auth/microsoft/callback"
+        return str(v).strip()
+
 
     @field_validator("REDIS_URL", mode="before")
     @classmethod
