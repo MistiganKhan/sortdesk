@@ -1,16 +1,18 @@
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
-
+from app.core.config import get_settings
+from app.core.rate_limiter import auth_rate_limiter
 from app.core.security import (
     create_access_token,
+    dummy_verify_password,
     generate_refresh_token,
     hash_password,
     hash_refresh_token,
+    needs_rehash,
     refresh_token_expiry,
     verify_password,
 )
-from app.core.config import get_settings
 from app.modules.auth import repository as repo
 from app.modules.auth.google_oauth import exchange_code_for_google_tokens, get_google_user_info
 
@@ -46,31 +48,33 @@ def signup_with_email(
     ip_address: str | None,
 ) -> dict:
     normalized_email = email.strip().lower()
+
+    # Rate limiting on signup attempts per IP to prevent automated account creation abuse
+    if ip_address:
+        ip_key = f"signup_ip:{ip_address}"
+        allowed_ip, retry_after_ip = auth_rate_limiter.is_allowed(ip_key, max_attempts=15, window_seconds=3600)
+        if not allowed_ip:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Too many account creation requests from this network. Please try again in {retry_after_ip} seconds.",
+                headers={"Retry-After": str(retry_after_ip)},
+            )
+        auth_rate_limiter.record_failure(ip_key, window_seconds=3600)
+
     existing = repo.get_user_by_email(normalized_email)
     if existing:
-        # If user exists with password, check it or inform user
-        if existing.get("password_hash") and not verify_password(password, existing["password_hash"]):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="An account with this email already exists. Please log in with your existing password.",
-            )
-        user = existing
-        # Update name/company if provided
-        updates = {}
-        if full_name and not existing.get("full_name"):
-            updates["full_name"] = full_name
-        if company_name and not existing.get("company_name"):
-            updates["company_name"] = company_name
-        if updates:
-            user = repo.update_user(user["id"], updates) or user
-    else:
-        pw_hash = hash_password(password)
-        user = repo.create_user(
-            email=normalized_email,
-            full_name=full_name,
-            company_name=company_name,
-            password_hash=pw_hash,
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An account with this email address already exists. Please sign in.",
         )
+
+    pw_hash = hash_password(password)
+    user = repo.create_user(
+        email=normalized_email,
+        full_name=full_name,
+        company_name=company_name,
+        password_hash=pw_hash,
+    )
 
     tokens = _issue_token_pair(user, user_agent, ip_address)
     return {"user": user, "tokens": tokens}
@@ -83,28 +87,62 @@ def login_with_email(
     ip_address: str | None,
 ) -> dict:
     normalized_email = email.strip().lower()
+    ip_key = f"ip:{ip_address}" if ip_address else None
+    email_key = f"email:{normalized_email}"
+
+    # 1. Enforce IP-based rate limiting (5 failed attempts per 15 minutes)
+    if ip_key:
+        allowed_ip, retry_after_ip = auth_rate_limiter.is_allowed(ip_key)
+        if not allowed_ip:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Too many failed login attempts from this network. Please try again in {retry_after_ip} seconds.",
+                headers={"Retry-After": str(retry_after_ip)},
+            )
+
+    # 2. Enforce account-based rate limiting (5 failed attempts per 15 minutes)
+    allowed_email, retry_after_email = auth_rate_limiter.is_allowed(email_key)
+    if not allowed_email:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Too many failed login attempts for this account. Please try again in {retry_after_email} seconds.",
+            headers={"Retry-After": str(retry_after_email)},
+        )
+
+    # 3. Retrieve user and verify credentials with timing side-channel mitigation
     user = repo.get_user_by_email(normalized_email)
     if not user:
+        dummy_verify_password()  # Execute constant-time calculation to eliminate user enumeration
+        if ip_key:
+            auth_rate_limiter.record_failure(ip_key)
+        auth_rate_limiter.record_failure(email_key)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="No account found with this email. Please sign up to create your recruiter workspace.",
+            detail="Invalid email or password.",
         )
 
     stored_hash = user.get("password_hash")
-    if stored_hash:
-        if not verify_password(password, stored_hash):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect password. Please verify your credentials and try again.",
-            )
-    else:
-        # Set password for accounts previously created via demo or oauth
-        pw_hash = hash_password(password)
-        user = repo.update_user(user["id"], {"password_hash": pw_hash}) or user
+    if not stored_hash or not verify_password(password, stored_hash):
+        if ip_key:
+            auth_rate_limiter.record_failure(ip_key)
+        auth_rate_limiter.record_failure(email_key)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password.",
+        )
+
+    # 4. Authentication succeeded: Reset failure counters
+    if ip_key:
+        auth_rate_limiter.reset_failures(ip_key)
+    auth_rate_limiter.reset_failures(email_key)
+
+    # 5. Transparently upgrade legacy or lower-iteration password hashes
+    if needs_rehash(stored_hash):
+        new_hash = hash_password(password)
+        user = repo.update_user(user["id"], {"password_hash": new_hash}) or user
 
     tokens = _issue_token_pair(user, user_agent, ip_address)
     return {"user": user, "tokens": tokens}
-
 
 
 async def login_with_google(code: str, user_agent: str | None, ip_address: str | None) -> dict:
@@ -170,6 +208,17 @@ def login_with_sso_direct(
 ) -> dict:
     """Provides direct, one-click Single Sign-On (SSO) for Google or Microsoft accounts."""
     prov = provider.strip().lower()
+
+    # Prevent account takeover of password-protected accounts via unverified direct SSO
+    if email:
+        target_check = email.strip().lower()
+        existing = repo.get_user_by_email(target_check)
+        if existing and existing.get("password_hash"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This account is protected by a password. Please sign in with your email and password, or use verified OAuth.",
+            )
+
     if prov in ("google", "gmail"):
         target_email = email.strip().lower() if email else "recruiter.google@sortdesk.ai"
         target_name = full_name or "Google Workspace Recruiter"

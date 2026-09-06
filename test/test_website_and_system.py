@@ -39,9 +39,12 @@ def test_website_root_and_dashboard_rendered():
 
 def test_any_account_signup_and_login_e2e():
     """Verify signup and login for any account without requiring Google or Microsoft OAuth."""
+    import uuid
+    test_email = f"sarah.connor.{uuid.uuid4().hex[:6]}@cyber-recruiting.tech"
+
     # 1. Sign up with a custom domain agency account
     signup_payload = {
-        "email": "sarah.connor@cyber-recruiting.tech",
+        "email": test_email,
         "password": "StrongPassword2026!",
         "full_name": "Sarah Connor",
         "company_name": "Cyber Recruiting Agency"
@@ -49,7 +52,7 @@ def test_any_account_signup_and_login_e2e():
     signup_resp = client.post("/auth/signup", json=signup_payload)
     assert signup_resp.status_code in [200, 201]
     signup_data = signup_resp.json()
-    assert signup_data["user"]["email"] == "sarah.connor@cyber-recruiting.tech"
+    assert signup_data["user"]["email"] == test_email
     assert signup_data["user"]["full_name"] == "Sarah Connor"
     assert signup_data["user"]["company_name"] == "Cyber Recruiting Agency"
     assert "access_token" in signup_data["tokens"]
@@ -59,24 +62,24 @@ def test_any_account_signup_and_login_e2e():
     me_resp = client.get("/auth/me", headers={"Authorization": f"Bearer {access_token}"})
     assert me_resp.status_code == 200
     me_data = me_resp.json()
-    assert me_data["email"] == "sarah.connor@cyber-recruiting.tech"
+    assert me_data["email"] == test_email
 
     # 3. Test login with wrong password
     bad_login = client.post("/auth/login", json={
-        "email": "sarah.connor@cyber-recruiting.tech",
+        "email": test_email,
         "password": "IncorrectPassword!"
     })
     assert bad_login.status_code == 401
 
     # 4. Test login with correct password
     good_login = client.post("/auth/login", json={
-        "email": "sarah.connor@cyber-recruiting.tech",
+        "email": test_email,
         "password": "StrongPassword2026!"
     })
     assert good_login.status_code == 200
     login_data = good_login.json()
     assert "access_token" in login_data["tokens"]
-    assert login_data["user"]["email"] == "sarah.connor@cyber-recruiting.tech"
+    assert login_data["user"]["email"] == test_email
 
 
 
