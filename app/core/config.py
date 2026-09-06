@@ -61,6 +61,13 @@ class Settings(BaseSettings):
         except (ValueError, TypeError):
             return 30
 
+    @field_validator("JWT_ALGORITHM", mode="before")
+    @classmethod
+    def clean_jwt_algorithm(cls, v: Any) -> str:
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "HS256"
+        return str(v).strip()
+
     @field_validator("SUPABASE_URL", mode="before")
     @classmethod
     def clean_supabase_url(cls, v: Any) -> str:
@@ -94,6 +101,34 @@ class Settings(BaseSettings):
     def clean_frontend_url(cls, v: Any) -> str:
         if not v or (isinstance(v, str) and not v.strip()):
             return "http://localhost:3000"
+        return str(v).strip()
+
+    @field_validator("GOOGLE_REDIRECT_URI", mode="before")
+    @classmethod
+    def clean_google_redirect_uri(cls, v: Any) -> str:
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "http://localhost:8000/auth/google/callback"
+        return str(v).strip()
+
+    @field_validator("GMAIL_REDIRECT_URI", mode="before")
+    @classmethod
+    def clean_gmail_redirect_uri(cls, v: Any) -> str:
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "http://localhost:8000/gmail/callback"
+        return str(v).strip()
+
+    @field_validator("OUTLOOK_REDIRECT_URI", mode="before")
+    @classmethod
+    def clean_outlook_redirect_uri(cls, v: Any) -> str:
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "http://localhost:8000/outlook/callback"
+        return str(v).strip()
+
+    @field_validator("REDIS_URL", mode="before")
+    @classmethod
+    def clean_redis_url(cls, v: Any) -> str:
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "redis://localhost:6379/0"
         return str(v).strip()
 
 
