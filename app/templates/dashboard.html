@@ -39,12 +39,21 @@
       document.documentElement.setAttribute('data-theme', savedTheme);
     })();
   </script>
+  <style id="authGate">
+    body { display: none !important; }
+  </style>
   <script>
     // Immediate authentication guard: redirect unauthenticated users to landing page
     (function() {
       const token = localStorage.getItem('sortdesk_auth_token');
       if (!token) {
         window.location.replace('/?auth_required=true');
+      } else {
+        // Token exists; allow body display once DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+          const gate = document.getElementById('authGate');
+          if (gate) gate.remove();
+        });
       }
     })();
   </script>
@@ -797,12 +806,6 @@ Sophia Martinez</textarea>
           <a href="javascript:void(0)" onclick="switchAuthTab('login')" class="text-indigo-400 hover:text-indigo-300 font-semibold">Sign In &rarr;</a>
         </div>
       </form>
-
-      <div class="pt-3 border-t border-slate-800 text-center">
-        <button onclick="quickDemoLogin()" type="button" class="w-full py-2 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center justify-center gap-2">
-          <span>Instant 1-Click Demo Recruiter Login</span>
-        </button>
-      </div>
     </div>
   </div>
 
@@ -1559,23 +1562,6 @@ Sophia Martinez</textarea>
         if (err) { err.innerText = errExp.message; err.classList.remove('hidden'); }
       } finally {
         if (btn) { btn.disabled = false; btn.innerText = "Create Free Recruiter Workspace"; }
-      }
-    }
-
-    async function quickDemoLogin() {
-      try {
-        const resp = await fetch('/auth/demo-token');
-        if (resp.ok) {
-          const data = await resp.json();
-          localStorage.setItem('sortdesk_auth_token', data.access_token);
-          localStorage.setItem('sortdesk_user', JSON.stringify(data.user));
-          localStorage.setItem('sortdesk_company_name', "Apex Talent Agency");
-          closeAuthModal();
-          showToast("Switched to Demo Recruiter profile.");
-          await initSession();
-        }
-      } catch (e) {
-        console.warn("Demo login failed", e);
       }
     }
 

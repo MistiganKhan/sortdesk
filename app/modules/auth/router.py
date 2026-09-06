@@ -148,7 +148,12 @@ async def logout(body: LogoutRequest):
 async def me(current_user: dict = Depends(get_current_user)):
     user = repo.get_user_by_id(current_user["id"])
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        return {
+            "id": current_user["id"],
+            "email": current_user["email"],
+            "full_name": current_user["email"].split("@")[0].replace(".", " ").title(),
+            "company_name": "SortDesk Agency",
+        }
     return user
 
 

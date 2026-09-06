@@ -207,9 +207,13 @@ async def sortdesk_auth_callback():
         const company = provider === 'google' ? 'Google Workspace Talent' : 'Microsoft 365 Talent';
         localStorage.setItem('sortdesk_user', JSON.stringify({ email, full_name: name, company_name: company }));
         localStorage.setItem('sortdesk_company_name', company);
+        window.location.href = '/dashboard';
+      } else {
+        window.location.href = '/?auth_required=true';
       }
-    } catch(e) {}
-    window.location.href = '/dashboard';
+    } catch(e) {
+      window.location.href = '/?auth_required=true';
+    }
   </script>
 </body>
 </html>""")

@@ -339,7 +339,7 @@
           <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
           <span>Zero Configuration Required &bull; Instant Local Demo Ready</span>
         </span>
-        <a href="/dashboard" class="text-indigo-400 hover:text-indigo-300 font-semibold">Direct Demo Access &rarr;</a>
+        <a href="javascript:void(0)" onclick="openDashboardOrAuth('signup')" class="text-indigo-400 hover:text-indigo-300 font-semibold">Get Started Free &rarr;</a>
       </div>
     </div>
 
@@ -392,7 +392,7 @@
             <p class="text-[11px] text-slate-300">
               Approved drafts dispatch directly through the candidate's original provider (Microsoft Graph or Gmail API).
             </p>
-            <a href="/dashboard" class="inline-block text-[11px] text-sky-400 hover:underline font-bold">Try Live in Dashboard &rarr;</a>
+            <a href="javascript:void(0)" onclick="openDashboardOrAuth('login')" class="inline-block text-[11px] text-sky-400 hover:underline font-bold">Try Live in Dashboard &rarr;</a>
           </div>
         </div>
       </div>
@@ -721,13 +721,6 @@
           <a href="javascript:void(0)" onclick="switchAuthTab('login')" class="text-indigo-400 hover:text-indigo-300 font-semibold">Sign In &rarr;</a>
         </div>
       </form>
-
-      <!-- 1-Click Instant Demo Access -->
-      <div class="pt-3 border-t border-slate-800 text-center">
-        <button onclick="quickDemoLogin()" type="button" class="w-full py-2 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center justify-center gap-2">
-          <span>Instant 1-Click Demo Recruiter Login</span>
-        </button>
-      </div>
     </div>
   </div>
 
@@ -740,7 +733,7 @@
         <span>The Fair First-Round Recruiter</span>
       </div>
       <div class="flex items-center gap-4">
-        <a href="/dashboard" class="hover:text-slate-300 transition">Dashboard</a>
+        <a href="javascript:void(0)" onclick="openDashboardOrAuth('login')" class="hover:text-slate-300 transition">Dashboard</a>
         <a href="/docs" target="_blank" class="hover:text-slate-300 transition">Swagger API</a>
         <a href="https://github.com/Comebck-Pakistan/cohort-1-product-challenge" target="_blank" class="hover:text-slate-300 transition">Challenge Repo</a>
       </div>
@@ -938,20 +931,13 @@
       }
     }
 
-    async function quickDemoLogin() {
-      try {
-        const resp = await fetch('/auth/demo-token');
-        if (resp.ok) {
-          const data = await resp.json();
-          localStorage.setItem('sortdesk_auth_token', data.access_token);
-          localStorage.setItem('sortdesk_user', JSON.stringify(data.user));
-          localStorage.setItem('sortdesk_company_name', "Apex Talent Agency");
-          closeAuthModal();
-          checkAuthState();
-          window.location.href = `/dashboard?company=Apex%20Talent%20Agency`;
-        }
-      } catch (e) {
-        console.warn("Demo login failed", e);
+    function openDashboardOrAuth(tab = 'login') {
+      const token = localStorage.getItem('sortdesk_auth_token');
+      if (token) {
+        const company = localStorage.getItem('sortdesk_company_name') || 'Apex Talent Agency';
+        window.location.href = `/dashboard?company=${encodeURIComponent(company)}`;
+      } else {
+        openAuthModal(tab);
       }
     }
 
