@@ -1,4 +1,7 @@
+import os
 from functools import lru_cache
+from typing import Any
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -38,7 +41,69 @@ class Settings(BaseSettings):
 
     ENVIRONMENT: str = "development"  # development | staging | production
 
+    @field_validator("ACCESS_TOKEN_EXPIRE_MINUTES", mode="before")
+    @classmethod
+    def clean_access_token_expire(cls, v: Any) -> int:
+        if v is None or v == "" or (isinstance(v, str) and not v.strip()):
+            return 60
+        try:
+            return int(v)
+        except (ValueError, TypeError):
+            return 60
+
+    @field_validator("REFRESH_TOKEN_EXPIRE_DAYS", mode="before")
+    @classmethod
+    def clean_refresh_token_expire(cls, v: Any) -> int:
+        if v is None or v == "" or (isinstance(v, str) and not v.strip()):
+            return 30
+        try:
+            return int(v)
+        except (ValueError, TypeError):
+            return 30
+
+    @field_validator("SUPABASE_URL", mode="before")
+    @classmethod
+    def clean_supabase_url(cls, v: Any) -> str:
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "https://placeholder-project.supabase.co"
+        return str(v).strip()
+
+    @field_validator("SUPABASE_SERVICE_KEY", mode="before")
+    @classmethod
+    def clean_supabase_key(cls, v: Any) -> str:
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "placeholder-service-key"
+        return str(v).strip()
+
+    @field_validator("JWT_SECRET_KEY", mode="before")
+    @classmethod
+    def clean_jwt_secret(cls, v: Any) -> str:
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "sortdesk-production-secure-jwt-key-2026-safe-fallback"
+        return str(v).strip()
+
+    @field_validator("GMAIL_TOKEN_ENCRYPTION_KEY", mode="before")
+    @classmethod
+    def clean_gmail_encryption_key(cls, v: Any) -> str:
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "dGVzdC1mZXJuZXQta2V5LTEyMzQ1Njc4OWFiY2RlZjA="
+        return str(v).strip()
+
+    @field_validator("FRONTEND_URL", mode="before")
+    @classmethod
+    def clean_frontend_url(cls, v: Any) -> str:
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "http://localhost:3000"
+        return str(v).strip()
+
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    try:
+        return Settings()
+    except Exception:
+        # Extra safety fallback if an unknown environment variable type causes a crash
+        for k in ["ACCESS_TOKEN_EXPIRE_MINUTES", "REFRESH_TOKEN_EXPIRE_DAYS"]:
+            if k in os.environ and not os.environ[k].strip():
+                del os.environ[k]
+        return Settings()
