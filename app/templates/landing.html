@@ -833,44 +833,17 @@
       }
     }
 
-    async function handleSSO(provider) {
+    function handleSSO(provider) {
       const err = document.getElementById('authErrorMsg');
       if (err) err.classList.add('hidden');
       const btnId = provider === 'google' ? 'btnSSOGoogle' : 'btnSSOMicrosoft';
       const textId = provider === 'google' ? 'ssoGoogleText' : 'ssoMicrosoftText';
-      const origText = provider === 'google' ? 'Continue with Google' : 'Continue with Microsoft';
       const btn = document.getElementById(btnId);
       const textEl = document.getElementById(textId);
       if (btn) btn.disabled = true;
-      if (textEl) textEl.innerText = `Connecting with ${provider === 'google' ? 'Google' : 'Microsoft'}...`;
+      if (textEl) textEl.innerText = `Redirecting to ${provider === 'google' ? 'Google' : 'Microsoft'}...`;
 
-      try {
-        const resp = await fetch('/auth/sso', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ provider })
-        });
-        const data = await resp.json();
-        if (!resp.ok) {
-          throw new Error(data.detail || "Single Sign-On failed");
-        }
-        localStorage.setItem('sortdesk_auth_token', data.tokens.access_token);
-        localStorage.setItem('sortdesk_user', JSON.stringify(data.user));
-        if (data.user.company_name) {
-          localStorage.setItem('sortdesk_company_name', data.user.company_name);
-        }
-        closeAuthModal();
-        checkAuthState();
-        window.location.href = `/dashboard?company=${encodeURIComponent(data.user.company_name || 'SortDesk Talent')}`;
-      } catch (errExp) {
-        if (err) {
-          err.innerText = errExp.message;
-          err.classList.remove('hidden');
-        }
-      } finally {
-        if (btn) btn.disabled = false;
-        if (textEl) textEl.innerText = origText;
-      }
+      window.location.href = provider === 'google' ? '/auth/google/login' : '/auth/microsoft/login';
     }
 
     async function handleLogin(e) {
