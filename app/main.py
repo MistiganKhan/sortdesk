@@ -14,18 +14,6 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.config import get_settings
-from app.modules.auth.router import router as auth_router
-from app.modules.gmail_integration.router import router as gmail_router
-from app.modules.emails.router import router as emails_router
-from app.modules.drafts.router import router as drafts_router
-from app.modules.queue.router import router as queue_router
-from app.modules.outlook_integration.router import router as outlook_router
-from app.modules.chat.router import router as chat_router
-from app.modules.candidates.router import router as candidates_router
-
-settings = get_settings()
-
 app = FastAPI(
     title="SortDesk — AI Recruiter Email Assistant API",
     description="SortDesk: AI-powered Gmail & Outlook agent for HR recruiters",
@@ -40,22 +28,78 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"error": "Internal Server Error", "detail": str(exc)},
     )
 
+try:
+    from app.core.config import get_settings
+    settings = get_settings()
+    frontend_url = settings.FRONTEND_URL
+except Exception:
+    frontend_url = "*"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, "*"],
+    allow_origins=[frontend_url, "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(auth_router)
-app.include_router(gmail_router)
-app.include_router(outlook_router)
-app.include_router(emails_router)
-app.include_router(drafts_router)
-app.include_router(queue_router)
-app.include_router(chat_router)
-app.include_router(candidates_router)
+router_errors = {}
+
+try:
+    from app.modules.auth.router import router as auth_router
+    app.include_router(auth_router)
+except Exception as e:
+    router_errors["auth"] = traceback.format_exc()
+    print("Warning: could not import auth router:", e)
+
+try:
+    from app.modules.gmail_integration.router import router as gmail_router
+    app.include_router(gmail_router)
+except Exception as e:
+    router_errors["gmail"] = traceback.format_exc()
+    print("Warning: could not import gmail router:", e)
+
+try:
+    from app.modules.outlook_integration.router import router as outlook_router
+    app.include_router(outlook_router)
+except Exception as e:
+    router_errors["outlook"] = traceback.format_exc()
+    print("Warning: could not import outlook router:", e)
+
+try:
+    from app.modules.emails.router import router as emails_router
+    app.include_router(emails_router)
+except Exception as e:
+    router_errors["emails"] = traceback.format_exc()
+    print("Warning: could not import emails router:", e)
+
+try:
+    from app.modules.drafts.router import router as drafts_router
+    app.include_router(drafts_router)
+except Exception as e:
+    router_errors["drafts"] = traceback.format_exc()
+    print("Warning: could not import drafts router:", e)
+
+try:
+    from app.modules.queue.router import router as queue_router
+    app.include_router(queue_router)
+except Exception as e:
+    router_errors["queue"] = traceback.format_exc()
+    print("Warning: could not import queue router:", e)
+
+try:
+    from app.modules.chat.router import router as chat_router
+    app.include_router(chat_router)
+except Exception as e:
+    router_errors["chat"] = traceback.format_exc()
+    print("Warning: could not import chat router:", e)
+
+try:
+    from app.modules.candidates.router import router as candidates_router
+    app.include_router(candidates_router)
+except Exception as e:
+    router_errors["candidates"] = traceback.format_exc()
+    print("Warning: could not import candidates router:", e)
 
 def _read_template(filename: str) -> str:
     possible_paths = [
@@ -161,4 +205,9 @@ async def sortdesk_auth_callback():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "app": "SortDesk", "version": "1.0.0"}
+    return {
+        "status": "ok",
+        "app": "SortDesk",
+        "version": "1.0.0",
+        "router_errors": router_errors,
+    }

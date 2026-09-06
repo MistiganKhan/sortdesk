@@ -1,21 +1,20 @@
 import os
 import sys
+import traceback
 from pathlib import Path
 
-# Ensure root directory and app directory are on Python path
-ROOT_DIR = Path(__file__).resolve().parent
+# Ensure root directory and app directory are on sys.path
+ROOT_DIR = Path(__file__).resolve().parent.parent
 APP_DIR = ROOT_DIR / "app"
 for p in [str(ROOT_DIR), str(APP_DIR)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-import traceback
-
 try:
     from app.main import app
 except Exception as e:
     _err = traceback.format_exc()
-    print("FATAL ERROR IMPORTING APP.MAIN:\n", _err, file=sys.stderr)
+    print("FATAL ERROR IN API/INDEX.PY:\n", _err, file=sys.stderr)
     from fastapi import FastAPI
     from fastapi.responses import HTMLResponse
     app = FastAPI(title="SortDesk Diagnostic Fallback")
@@ -24,12 +23,8 @@ except Exception as e:
     async def _diagnostic_fallback(full_path: str = ""):
         return HTMLResponse(
             f"<html><body style='background:#18181b;color:#f43f5e;font-family:monospace;padding:30px;'>"
-            f"<h2>SortDesk Startup Import Error</h2><pre style='background:#27272a;color:#fecdd3;padding:20px;border-radius:8px;'>{_err}</pre></body></html>",
+            f"<h2>SortDesk Startup Import Error (api/index.py)</h2><pre style='background:#27272a;color:#fecdd3;padding:20px;border-radius:8px;'>{_err}</pre></body></html>",
             status_code=200
         )
 
 __all__ = ["app"]
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
