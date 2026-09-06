@@ -7,12 +7,6 @@ from app.modules.outlook_integration.ms_oauth import (
     exchange_code_for_outlook_tokens,
     refresh_outlook_access_token,
 )
-from tasks.classifier import classify_and_save
-from tasks.duplicate import check_and_save
-from tasks.resume import process_resume_from_outlook
-from tasks.draft import generate_and_save
-from rag.embedder import embed_and_save_email
-from tasks.queue import check_needs_attention
 
 
 async def handle_outlook_callback(code: str, user_id: str) -> dict:
@@ -95,6 +89,7 @@ async def sync_now(connection_id: str, user_id: str, max_results: int = 20) -> d
             # handle resume attachment if present
             if parsed.get("has_attachment"):
                 try:
+                    from tasks.resume import process_resume_from_outlook
                     await process_resume_from_outlook(
                         access_token=access_token,
                         message_id=message_id,
@@ -106,6 +101,11 @@ async def sync_now(connection_id: str, user_id: str, max_results: int = 20) -> d
 
             # trigger AI pipeline
             try:
+                from tasks.classifier import classify_and_save
+                from tasks.duplicate import check_and_save
+                from tasks.queue import check_needs_attention
+                from rag.embedder import embed_and_save_email
+                from tasks.draft import generate_and_save
                 classify_and_save(email_id)
                 await check_and_save(email_id, user_id)
                 check_needs_attention(email_id, user_id)

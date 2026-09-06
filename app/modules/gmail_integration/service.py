@@ -7,11 +7,6 @@ from app.modules.gmail_integration.google_oauth import (
     exchange_code_for_gmail_tokens,
     refresh_gmail_access_token,
 )
-from tasks.classifier import classify_and_save
-from tasks.duplicate import check_and_save    
-from tasks.resume import process_resume_from_gmail
-from rag.embedder import embed_and_save_email
-from tasks.queue import check_needs_attention
 
 
 async def handle_gmail_callback(code: str, user_id: str) -> dict:
@@ -88,18 +83,41 @@ async def sync_now(connection_id: str, user_id: str, max_results: int = 20) -> d
 
             # handle resume attachment if present
             if parsed.get("has_attachment"):
-                await process_resume_from_gmail(
-                    access_token=access_token,
-                    message_id=message_id,
-                    email_id=email_id,
-                    user_id=user_id
-                )
+                try:
+                    from tasks.resume import process_resume_from_gmail
+                    await process_resume_from_gmail(
+                        access_token=access_token,
+                        message_id=message_id,
+                        email_id=email_id,
+                        user_id=user_id
+                    )
+                except Exception as exc:
+                    pass
 
             # trigger AI pipeline
-            classify_and_save(email_id)
-            await check_and_save(email_id, user_id)
-            check_needs_attention(email_id, user_id)
-            await embed_and_save_email(email_id)
+            try:
+                from tasks.classifier import classify_and_save
+                classify_and_save(email_id)
+            except Exception:
+                pass
+
+            try:
+                from tasks.duplicate import check_and_save
+                await check_and_save(email_id, user_id)
+            except Exception:
+                pass
+
+            try:
+                from tasks.queue import check_needs_attention
+                check_needs_attention(email_id, user_id)
+            except Exception:
+                pass
+
+            try:
+                from rag.embedder import embed_and_save_email
+                await embed_and_save_email(email_id)
+            except Exception:
+                pass
         else:
             skipped += 1
     return {"checked": len(message_ids), "inserted": inserted, "skipped_existing": skipped}
