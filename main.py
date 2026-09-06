@@ -9,7 +9,18 @@ for p in [str(ROOT_DIR), str(APP_DIR)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
+import asyncio
 import traceback
+
+# Ensure event loop is active for ASGI in serverless environments
+try:
+    asyncio.get_running_loop()
+except RuntimeError:
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
 try:
     from app.main import app

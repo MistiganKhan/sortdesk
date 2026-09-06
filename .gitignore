@@ -37,3 +37,4 @@ sortdesk_local.db
 .claude/
 .DS_Store
 Thumbs.db
+*.pdf

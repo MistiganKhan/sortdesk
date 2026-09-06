@@ -2,7 +2,7 @@
 name = "sortdesk"
 version = "1.0.0"
 description = "SortDesk - AI-powered recruitment email assistant"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 
 [tool.vercel]
-entrypoint = "main:app"
+entrypoint = "app:app"
