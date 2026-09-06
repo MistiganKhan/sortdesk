@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SortDesk — The Fair First-Round Recruiter | AI Email Assistant for Talent Teams</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#1e1b4b',
+            },
+            outlook: '#0078D4',
+            gmail: '#EA4335',
+          }
+        }
+      }
+    }
+  </script>
+  <script>
+    // Immediate theme bootstrap to prevent flicker
+    (function() {
+      const savedTheme = localStorage.getItem('sortdesk_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+  <style>
+    body { background-color: #080c16; color: #f1f5f9; transition: background-color 0.2s ease, color 0.2s ease; }
+    .glass-card {
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .glass-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+    .glow-bg {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(14, 165, 233, 0.05) 50%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ========================================================
+       SortDesk Light Mode Theme (Strict Palette Specification)
+       - Cream background: #F5F1E4
+       - Charcoal / sidebar / headings: #1A1A1A
+       - Amber accent: #F5B800
+       - Card white: #FFFFFF
+       - Secondary text: #6B6B6B
+       - Divider / border: #E5E0D3
+       ======================================================== */
+    html[data-theme="light"] body {
+      background-color: #F5F1E4 !important;
+      color: #1A1A1A !important;
+    }
+    html[data-theme="light"] .glass-card {
+      background: #FFFFFF !important;
+      border: 1px solid #E5E0D3 !important;
+      box-shadow: 0 4px 20px -2px rgba(26, 26, 26, 0.06), 0 2px 6px -1px rgba(26, 26, 26, 0.03) !important;
+    }
+    html[data-theme="light"] .glass-card:hover {
+      border-color: #F5B800 !important;
+      box-shadow: 0 10px 25px -4px rgba(245, 184, 0, 0.15) !important;
+    }
+    html[data-theme="light"] header {
+      background: rgba(245, 241, 228, 0.95) !important;
+      border-bottom: 1px solid #E5E0D3 !important;
+      backdrop-filter: blur(12px);
+    }
+    html[data-theme="light"] footer {
+      background-color: #1A1A1A !important;
+      border-color: #1A1A1A !important;
+      color: #E5E0D3 !important;
+    }
+    html[data-theme="light"] footer a {
+      color: #E5E0D3 !important;
+    }
+    html[data-theme="light"] footer a:hover {
+      color: #F5B800 !important;
+    }
+    html[data-theme="light"] .glow-bg {
+      background: radial-gradient(circle, rgba(245, 184, 0, 0.15) 0%, rgba(229, 224, 211, 0.4) 50%, transparent 70%) !important;
+      opacity: 0.6 !important;
+    }
+    html[data-theme="light"] .text-white {
+      color: #1A1A1A !important;
+    }
+    html[data-theme="light"] .text-slate-400,
+    html[data-theme="light"] .text-slate-300,
+    html[data-theme="light"] .text-slate-500 {
+      color: #6B6B6B !important;
+    }
+    html[data-theme="light"] .border-slate-800,
+    html[data-theme="light"] .border-slate-800\/80,
+    html[data-theme="light"] .border-slate-700,
+    html[data-theme="light"] .border-slate-700\/50,
+    html[data-theme="light"] .border-slate-700\/40 {
+      border-color: #E5E0D3 !important;
+    }
+    html[data-theme="light"] .bg-slate-950,
+    html[data-theme="light"] .bg-slate-900,
+    html[data-theme="light"] .bg-slate-900\/90,
+    html[data-theme="light"] .bg-slate-900\/80,
+    html[data-theme="light"] .bg-slate-800,
+    html[data-theme="light"] .bg-slate-800\/50,
+    html[data-theme="light"] .bg-slate-800\/40 {
+      background-color: #FFFFFF !important;
+    }
+    html[data-theme="light"] input,
+    html[data-theme="light"] select,
+    html[data-theme="light"] textarea {
+      background-color: #FFFFFF !important;
+      color: #1A1A1A !important;
+      border: 1px solid #E5E0D3 !important;
+    }
+    html[data-theme="light"] input::placeholder,
+    html[data-theme="light"] textarea::placeholder {
+      color: #6B6B6B !important;
+    }
+    html[data-theme="light"] input:focus,
+    html[data-theme="light"] textarea:focus {
+      border-color: #F5B800 !important;
+      box-shadow: 0 0 0 3px rgba(245, 184, 0, 0.25) !important;
+    }
+    .theme-toggle-btn {
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    html[data-theme="light"] .theme-toggle-btn {
+      background-color: #FFFFFF !important;
+      color: #1A1A1A !important;
+      border: 1px solid #E5E0D3 !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    html[data-theme="light"] .theme-toggle-btn:hover {
+      background-color: #F5F1E4 !important;
+      border-color: #F5B800 !important;
+    }
+    .sso-btn {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+    html[data-theme="light"] .sso-btn {
+      background-color: #FFFFFF !important;
+      color: #1A1A1A !important;
+      border: 1px solid #E5E0D3 !important;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    html[data-theme="light"] .sso-btn:hover {
+      background-color: #FBF8F0 !important;
+      border-color: #F5B800 !important;
+      color: #1A1A1A !important;
+    }
+    html[data-theme="light"] .sso-divider-text {
+      background-color: #FFFFFF !important;
+      color: #6B6B6B !important;
+    }
+    html[data-theme="dark"] .theme-toggle-btn {
+      background-color: rgba(15, 23, 42, 0.8) !important;
+      color: #f1f5f9 !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    }
+    html[data-theme="dark"] .theme-toggle-btn:hover {
+      background-color: rgba(30, 41, 59, 0.9) !important;
+      border-color: #818cf8 !important;
+    }
+    html[data-theme="light"] .btn-amber-action {
+      background: #F5B800 !important;
+      color: #1A1A1A !important;
+      border: 1px solid #F5B800 !important;
+      box-shadow: 0 4px 14px rgba(245, 184, 0, 0.35) !important;
+    }
+    html[data-theme="light"] .btn-amber-action:hover {
+      background: #e0a700 !important;
+      border-color: #e0a700 !important;
+    }
+    html[data-theme="light"] #authModal {
+      background-color: rgba(26, 26, 26, 0.45) !important;
+    }
+    html[data-theme="light"] #landingGuestNav button#navLoginBtn {
+      background-color: #FFFFFF !important;
+      color: #1A1A1A !important;
+      border: 1px solid #E5E0D3 !important;
+    }
+    html[data-theme="light"] #landingGuestNav button#navLoginBtn:hover {
+      background-color: #F5F1E4 !important;
+      border-color: #F5B800 !important;
+    }
+    html[data-theme="light"] #landingUserPill {
+      background-color: #FFFFFF !important;
+      color: #1A1A1A !important;
+      border-color: #E5E0D3 !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans relative overflow-x-hidden selection:bg-indigo-600 selection:text-white">
+
+  <!-- Ambient background glow elements -->
+  <div class="glow-bg top-0 left-1/2 -translate-x-1/2"></div>
+  <div class="glow-bg top-[800px] -left-48 opacity-60"></div>
+  <div class="glow-bg top-[1600px] -right-48 opacity-60"></div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 glass-card border-b border-slate-800/80 bg-slate-950/70">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center shadow-lg">
+          <svg class="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xl font-bold tracking-tight text-white">SortDesk</span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-medium">The Fair First-Round Recruiter</p>
+        </div>
+      </div>
+
+      <nav class="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-300">
+        <a href="#features" class="hover:text-white transition">Features</a>
+        <a href="#how-it-works" class="hover:text-white transition">How It Works</a>
+        <a href="#metrics" class="hover:text-white transition">Product Impact</a>
+        <a href="/docs" target="_blank" class="hover:text-white transition flex items-center gap-1">
+          <span>API Docs</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </a>
+      </nav>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Theme Toggle Button -->
+        <button 
+          onclick="toggleTheme()" 
+          id="themeToggleBtn" 
+          class="theme-toggle-btn px-3 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center gap-1.5"
+          title="Toggle Light / Dark Mode"
+        >
+          <span id="themeToggleIcon" class="flex items-center">
+            <svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          </span>
+          <span id="themeToggleText">Light</span>
+        </button>
+
+        <!-- Unauthenticated actions -->
+        <div id="landingGuestNav" class="flex items-center gap-2">
+          <button 
+            onclick="openAuthModal('login')" 
+            id="navLoginBtn" 
+            class="px-3.5 py-1.5 text-xs font-semibold rounded-xl border border-slate-700 hover:border-slate-500 text-slate-200 transition"
+          >
+            Log In
+          </button>
+          <button 
+            onclick="openAuthModal('signup')" 
+            id="navSignupBtn" 
+            class="btn-amber-action px-3.5 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg transition"
+          >
+            Sign Up
+          </button>
+        </div>
+
+        <!-- Authenticated actions -->
+        <div id="landingUserNav" class="hidden flex items-center gap-2">
+          <span id="landingUserPill" class="text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-slate-900 text-slate-200 border border-slate-700 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 01-8 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            <span id="landingUserName">Recruiter</span>
+          </span>
+          <a href="/dashboard" class="btn-amber-action px-3.5 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg transition flex items-center gap-1">
+            <span>Workspace &rarr;</span>
+          </a>
+          <button onclick="logoutUser()" class="text-xs text-slate-400 hover:text-rose-400 font-semibold px-2 py-1 transition">
+            Log Out
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative z-10 pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center space-y-8">
+    <h1 class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-[1.15] max-w-4xl mx-auto">
+      The Fair First-Round Recruiter <br />
+      <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-sky-400 to-purple-400">
+        for Modern Talent Teams
+      </span>
+    </h1>
+
+    <p class="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto font-normal leading-relaxed">
+      Process 100+ candidate emails a day without recruiter burnout. SortDesk automatically categorizes incoming emails, parses candidate resumes, and drafts personalized replies for <strong>1-click approval</strong> across <strong>Gmail</strong> and <strong>Outlook</strong>.
+    </p>
+
+    <!-- Company Workspace Access Card -->
+    <div class="max-w-xl mx-auto glass-card p-4 sm:p-5 rounded-2xl shadow-2xl border border-indigo-500/30 text-left">
+      <label class="block text-xs font-semibold text-slate-300 mb-2">
+        Enter Your Company / Recruitment Agency Workspace:
+      </label>
+      <div class="flex flex-col sm:flex-row gap-2.5">
+        <div class="relative flex-1">
+          <input 
+            type="text" 
+            id="companyInput" 
+            placeholder="e.g. Apex Talent, Starlight Agency, Acme Corp..." 
+            value="Apex Talent Agency"
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-medium"
+            onkeydown="if(event.key==='Enter') goToDashboard()"
+          />
+        </div>
+        <button 
+          onclick="goToDashboard()" 
+          class="btn-amber-action px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-1.5 whitespace-nowrap"
+        >
+          <span>Enter Workspace</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </button>
+      </div>
+
+      <div class="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+        <span class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>Zero Configuration Required &bull; Instant Local Demo Ready</span>
+        </span>
+        <a href="/dashboard" class="text-indigo-400 hover:text-indigo-300 font-semibold">Direct Demo Access &rarr;</a>
+      </div>
+    </div>
+
+    <!-- Live Interactive Mockup Banner -->
+    <div class="pt-8 max-w-5xl mx-auto">
+      <div class="glass-card rounded-2xl p-6 border border-slate-800 shadow-2xl space-y-4 text-left">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
+            <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
+            <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+            <span class="ml-2 text-xs font-mono text-slate-400">SortDesk Unified Recruiter Engine (Outlook + Gmail)</span>
+          </div>
+          <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">Active Ingestion Engine</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Step 1 preview -->
+          <div class="p-4 bg-slate-900/80 rounded-xl border border-slate-800 space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">OUTLOOK</span>
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">New Applicant</span>
+            </div>
+            <h4 class="text-xs font-bold text-white">Sarah Jenkins &lt;sarah.jenkins@outlook.com&gt;</h4>
+            <p class="text-[11px] text-slate-400 line-clamp-2">"Application for Senior Backend Engineer (Python / FastAPI)..."</p>
+            <div class="text-[10px] text-emerald-400 font-medium pt-1 flex items-center gap-1">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+              <span>resume.pdf parsed: Python, FastAPI, Docker</span>
+            </div>
+          </div>
+
+          <!-- Step 2 preview -->
+          <div class="p-4 bg-slate-900/80 rounded-xl border border-indigo-500/30 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">AI GENERATED DRAFT</span>
+              <span class="text-[10px] text-amber-400">Pending Review</span>
+            </div>
+            <p class="text-[11px] text-slate-300 leading-relaxed line-clamp-3 italic">
+              "Dear Sarah, Thank you for applying for Senior Backend Engineer. We are reviewing your Python and PostgreSQL experience..."
+            </p>
+            <div class="text-[10px] text-slate-400">Recruiter can edit inline before sending.</div>
+          </div>
+
+          <!-- Step 3 preview -->
+          <div class="p-4 bg-slate-900/80 rounded-xl border border-emerald-500/30 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-500/10 text-emerald-400">1-CLICK APPROVAL</span>
+              <span class="text-[10px] text-emerald-400 font-mono">QUEUE-02 AUTO-RESOLVE</span>
+            </div>
+            <p class="text-[11px] text-slate-300">
+              Approved drafts dispatch directly through the candidate's original provider (Microsoft Graph or Gmail API).
+            </p>
+            <a href="/dashboard" class="inline-block text-[11px] text-sky-400 hover:underline font-bold">Try Live in Dashboard &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem vs Solution -->
+  <section class="py-16 bg-slate-950/60 border-y border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto mb-12 space-y-3">
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Built Specifically for Solo Recruiters</h2>
+        <p class="text-xs sm:text-sm text-slate-400">Managing open requisitions via raw inboxes and messy spreadsheets is breaking talent acquisition.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- The Problem -->
+        <div class="glass-card p-6 sm:p-8 rounded-2xl border-rose-500/20 space-y-4">
+          <div class="flex items-center gap-2 text-rose-400 font-bold text-sm">
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+            <span>The Painful Reality (Before SortDesk)</span>
+          </div>
+          <ul class="space-y-3 text-xs text-slate-300">
+            <li class="flex items-start gap-2">
+              <span class="text-rose-400 font-bold">&bull;</span>
+              <span><strong>Delayed Candidate Communication:</strong> Genuine candidates wait 48+ hours for responses and accept competing offers.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-rose-400 font-bold">&bull;</span>
+              <span><strong>Inbox Overload & Chaos:</strong> Solo recruiters process 100+ emails/day, losing critical interview replies and follow-ups.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-rose-400 font-bold">&bull;</span>
+              <span><strong>15+ Hours of Repetitive Overhead:</strong> Manual copy-pasting of rejection notes, interview invites, and resume tracking.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- The Solution -->
+        <div class="glass-card p-6 sm:p-8 rounded-2xl border-emerald-500/20 space-y-4">
+          <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>The SortDesk Advantage (With AI Pair-Recruiter)</span>
+          </div>
+          <ul class="space-y-3 text-xs text-slate-300">
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-400 font-bold">&bull;</span>
+              <span><strong>&lt; 1 Hour Response Times:</strong> AI categorizes messages and prepares personalized drafts in seconds.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-400 font-bold">&bull;</span>
+              <span><strong>Human-in-the-Loop Control:</strong> No rogue bots. You inspect, edit, or approve every reply with one click.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-400 font-bold">&bull;</span>
+              <span><strong>Automated Resume & Skill Extraction:</strong> Resumes in PDF/DOCX are automatically parsed into your talent database.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key Features Grid -->
+  <section id="features" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <div class="text-center max-w-3xl mx-auto space-y-3">
+      <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Core Capabilities</span>
+      <h2 class="text-3xl font-extrabold text-white">Everything Solo Recruiters Need to Scale</h2>
+      <p class="text-xs sm:text-sm text-slate-400">An enterprise-grade talent pipeline without the clunky complexity or pricing of legacy ATS software.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- F1 -->
+      <div class="glass-card p-6 rounded-2xl space-y-3">
+        <div class="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center font-bold">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </div>
+        <h3 class="text-base font-bold text-white">Dual-Provider Inbox Integration</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Full support for both <strong>Google Gmail</strong> (REST API) and <strong>Microsoft Outlook / 365</strong> (Graph API) with thread synchronization.
+        </p>
+      </div>
+
+      <!-- F2 -->
+      <div class="glass-card p-6 rounded-2xl space-y-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+        </div>
+        <h3 class="text-base font-bold text-white">AI Classification & Priority</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Identifies 10 recruitment categories: New Applicant, Interview Scheduling, Follow-ups, Offer Responses, and flags urgency immediately.
+        </p>
+      </div>
+
+      <!-- F3 -->
+      <div class="glass-card p-6 rounded-2xl space-y-3">
+        <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        </div>
+        <h3 class="text-base font-bold text-white">Human-in-the-Loop AI Drafts</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          AI crafts contextual responses matching the recruiter's preferred tone. Review, edit inline, or dispatch with a single click.
+        </p>
+      </div>
+
+      <!-- F4 -->
+      <div class="glass-card p-6 rounded-2xl space-y-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 class="text-base font-bold text-white">Needs Attention Queue (QUEUE-02)</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Urgent interview reschedule requests and high-priority candidate queries are collected into an actionable queue that auto-resolves when sent.
+        </p>
+      </div>
+
+      <!-- F5 -->
+      <div class="glass-card p-6 rounded-2xl space-y-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <h3 class="text-base font-bold text-white">Automated Resume Parsing</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Extracts applicant contact info, roles, experience, and technical skill tags from PDF and Word attachments into your talent pool.
+        </p>
+      </div>
+
+      <!-- F6 -->
+      <div class="glass-card p-6 rounded-2xl space-y-3">
+        <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center font-bold">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+        </div>
+        <h3 class="text-base font-bold text-white">Hybrid RAG HR Chat Assistant</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Ask plain-English questions like <em>"Did any Python candidates apply from Outlook today?"</em> and receive instant contextual answers.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Product Metrics / Proof -->
+  <section id="metrics" class="py-16 bg-slate-950/70 border-y border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+        <div class="space-y-1">
+          <div class="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-sky-400">&lt; 1 Hour</div>
+          <div class="text-xs text-slate-400 font-semibold">Candidate Response Time</div>
+        </div>
+        <div class="space-y-1">
+          <div class="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-sky-400">2+ Hours</div>
+          <div class="text-xs text-slate-400 font-semibold">Saved Daily Per Recruiter</div>
+        </div>
+        <div class="space-y-1">
+          <div class="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-sky-400">&gt; 85%</div>
+          <div class="text-xs text-slate-400 font-semibold">Draft Acceptance Rate</div>
+        </div>
+        <div class="space-y-1">
+          <div class="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-sky-400">0%</div>
+          <div class="text-xs text-slate-400 font-semibold">Candidate Ghosting Rate</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it Works -->
+  <section id="how-it-works" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <div class="text-center max-w-3xl mx-auto space-y-3">
+      <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Workflow</span>
+      <h2 class="text-3xl font-extrabold text-white">How SortDesk Works in 3 Steps</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="glass-card p-6 rounded-2xl space-y-3 relative">
+        <div class="text-4xl font-extrabold text-indigo-500/30">01</div>
+        <h4 class="text-base font-bold text-white">Connect Company Inboxes</h4>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Link Microsoft 365 or Google Gmail accounts securely via OAuth 2.0 with encrypted token storage.
+        </p>
+      </div>
+
+      <div class="glass-card p-6 rounded-2xl space-y-3 relative">
+        <div class="text-4xl font-extrabold text-indigo-500/30">02</div>
+        <h4 class="text-base font-bold text-white">AI Reads & Classifies</h4>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Incoming messages are labeled, resumes are parsed for skill tags, and high-priority messages are highlighted.
+        </p>
+      </div>
+
+      <div class="glass-card p-6 rounded-2xl space-y-3 relative">
+        <div class="text-4xl font-extrabold text-indigo-500/30">03</div>
+        <h4 class="text-base font-bold text-white">Review, Edit & Send</h4>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Review the generated reply side-by-side with candidate details and dispatch with 1 click.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action Banner -->
+  <section class="py-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center">
+    <div class="glass-card p-8 sm:p-12 rounded-3xl border border-indigo-500/40 bg-gradient-to-b from-slate-900/90 to-slate-950/90 space-y-6 shadow-2xl">
+      <h3 class="text-2xl sm:text-4xl font-extrabold text-white">
+        Ready to Transform Your Candidate Experience?
+      </h3>
+      <p class="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
+        Join solo recruiters and small talent teams saving 15+ hours weekly while never letting a top candidate slip through the cracks.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <button onclick="goToDashboard()" class="btn-amber-action px-6 py-3 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white shadow-xl shadow-indigo-500/30 transition flex items-center gap-2">
+          <span>Launch Your Recruiter Workspace</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Auth Modal: Sign In / Sign Up (Works with ANY Email Account) -->
+  <div id="authModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full rounded-2xl p-6 sm:p-7 space-y-5 border border-indigo-500/30 shadow-2xl relative">
+      <!-- Close button -->
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center shadow-lg">
+          <svg class="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-white" id="authModalTitle">Sign In to SortDesk</h3>
+          <p class="text-xs text-slate-400 font-medium">Use ANY work, corporate, or agency email</p>
+        </div>
+      </div>
+
+      <!-- Direct SSO Options (Google & Microsoft) -->
+      <div class="space-y-2">
+        <button type="button" onclick="handleSSO('google')" id="btnSSOGoogle" class="sso-btn w-full py-2.5 px-4 rounded-xl border border-slate-700/80 bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold text-xs flex items-center justify-center gap-2.5 shadow-sm">
+          <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span id="ssoGoogleText">Continue with Google</span>
+        </button>
+
+        <button type="button" onclick="handleSSO('microsoft')" id="btnSSOMicrosoft" class="sso-btn w-full py-2.5 px-4 rounded-xl border border-slate-700/80 bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold text-xs flex items-center justify-center gap-2.5 shadow-sm">
+          <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 23 23">
+            <path fill="#f35325" d="M1 1h10v10H1z"/>
+            <path fill="#81bc06" d="M12 1h10v10H12z"/>
+            <path fill="#05a6f0" d="M1 12h10v10H1z"/>
+            <path fill="#ffba08" d="M12 12h10v10H12z"/>
+          </svg>
+          <span id="ssoMicrosoftText">Continue with Microsoft</span>
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="relative flex items-center justify-center my-2">
+        <div class="border-t border-slate-800 flex-grow"></div>
+        <span class="sso-divider-text px-3 text-[10px] uppercase font-bold tracking-wider text-slate-500 bg-slate-950/80 rounded-full">or continue with email</span>
+        <div class="border-t border-slate-800 flex-grow"></div>
+      </div>
+
+      <!-- Universal Email Account Notice -->
+      <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 flex items-start gap-2">
+        <svg class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+        <span><strong>Any Email Provider Supported:</strong> Use your agency domain, corporate email, or personal account — zero platform lock-in!</span>
+      </div>
+
+      <!-- Modal Tabs: Sign In vs Sign Up -->
+      <div class="flex border-b border-slate-800 pb-1 gap-2">
+        <button onclick="switchAuthTab('login')" id="authTabLogin" class="flex-1 py-2 text-xs font-bold text-white border-b-2 border-indigo-500 transition">
+          Sign In
+        </button>
+        <button onclick="switchAuthTab('signup')" id="authTabSignup" class="flex-1 py-2 text-xs font-semibold text-slate-400 border-b-2 border-transparent hover:text-white transition">
+          Create Account (Sign Up)
+        </button>
+      </div>
+
+      <!-- Error Notice -->
+      <div id="authErrorMsg" class="hidden p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium"></div>
+
+      <!-- FORM 1: LOGIN -->
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Email Address (Any Domain):</label>
+          <input type="email" id="loginEmail" required placeholder="e.g. recruiter@agency.com, sarah@company.io" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-medium" />
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Password:</label>
+          <input type="password" id="loginPassword" required placeholder="Enter your password" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+        </div>
+        <button type="submit" id="btnLoginSubmit" class="btn-amber-action w-full py-2.5 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg transition">
+          Sign In to Workspace
+        </button>
+        <div class="pt-2 text-center text-[11px] text-slate-400 flex items-center justify-center gap-2">
+          <span>Need an account?</span>
+          <a href="javascript:void(0)" onclick="switchAuthTab('signup')" class="text-indigo-400 hover:text-indigo-300 font-semibold">Sign Up Free &rarr;</a>
+        </div>
+      </form>
+
+      <!-- FORM 2: SIGN UP -->
+      <form id="signupForm" onsubmit="handleSignup(event)" class="hidden space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Full Name:</label>
+          <input type="text" id="signupName" required placeholder="e.g. Sarah Jenkins" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-medium" />
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Work / Recruitment Email (Any Domain):</label>
+          <input type="email" id="signupEmail" required placeholder="e.g. sarah@toprecruit.agency, hr@yourcompany.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-medium" />
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Company / Agency Workspace Name:</label>
+          <input type="text" id="signupCompany" placeholder="e.g. Apex Talent, Global Recruiting" value="Apex Talent Agency" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-medium" />
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Create Password:</label>
+          <input type="password" id="signupPassword" required minlength="6" placeholder="Choose a password (min 6 chars)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+        </div>
+        <button type="submit" id="btnSignupSubmit" class="btn-amber-action w-full py-2.5 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg transition">
+          Create Free Recruiter Workspace
+        </button>
+        <div class="pt-2 text-center text-[11px] text-slate-400 flex items-center justify-center gap-2">
+          <span>Already registered?</span>
+          <a href="javascript:void(0)" onclick="switchAuthTab('login')" class="text-indigo-400 hover:text-indigo-300 font-semibold">Sign In &rarr;</a>
+        </div>
+      </form>
+
+      <!-- 1-Click Instant Demo Access -->
+      <div class="pt-3 border-t border-slate-800 text-center">
+        <button onclick="quickDemoLogin()" type="button" class="w-full py-2 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center justify-center gap-2">
+          <span>Instant 1-Click Demo Recruiter Login</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-slate-800/80 bg-slate-950/80 py-8 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span>SortDesk</span>
+        <span>&bull;</span>
+        <span>The Fair First-Round Recruiter</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="/dashboard" class="hover:text-slate-300 transition">Dashboard</a>
+        <a href="/docs" target="_blank" class="hover:text-slate-300 transition">Swagger API</a>
+        <a href="https://github.com/Comebck-Pakistan/cohort-1-product-challenge" target="_blank" class="hover:text-slate-300 transition">Challenge Repo</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function updateThemeUI(theme) {
+      const btnText = document.getElementById('themeToggleText');
+      const btnIcon = document.getElementById('themeToggleIcon');
+      if (theme === 'light') {
+        if (btnText) btnText.innerText = 'Dark';
+        if (btnIcon) btnIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>';
+      } else {
+        if (btnText) btnText.innerText = 'Light';
+        if (btnIcon) btnIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>';
+      }
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const newTheme = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('sortdesk_theme', newTheme);
+      updateThemeUI(newTheme);
+    }
+
+    function checkAuthState() {
+      const token = localStorage.getItem('sortdesk_auth_token');
+      const guestNav = document.getElementById('landingGuestNav');
+      const userNav = document.getElementById('landingUserNav');
+      const userNameDisplay = document.getElementById('landingUserName');
+      if (token) {
+        try {
+          const userStr = localStorage.getItem('sortdesk_user');
+          const user = userStr ? JSON.parse(userStr) : null;
+          if (userNameDisplay && user) {
+            userNameDisplay.innerText = user.full_name || user.email;
+          }
+          if (guestNav) guestNav.classList.add('hidden');
+          if (userNav) userNav.classList.remove('hidden');
+        } catch (e) {
+          if (guestNav) guestNav.classList.remove('hidden');
+          if (userNav) userNav.classList.add('hidden');
+        }
+      } else {
+        if (guestNav) guestNav.classList.remove('hidden');
+        if (userNav) userNav.classList.add('hidden');
+      }
+    }
+
+    function logoutUser() {
+      localStorage.removeItem('sortdesk_auth_token');
+      localStorage.removeItem('sortdesk_user');
+      checkAuthState();
+    }
+
+    function openAuthModal(tab = 'login') {
+      const modal = document.getElementById('authModal');
+      modal.classList.remove('hidden');
+      switchAuthTab(tab);
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.add('hidden');
+      document.getElementById('authErrorMsg').classList.add('hidden');
+    }
+
+    function switchAuthTab(tab) {
+      const tabLogin = document.getElementById('authTabLogin');
+      const tabSignup = document.getElementById('authTabSignup');
+      const formLogin = document.getElementById('loginForm');
+      const formSignup = document.getElementById('signupForm');
+      const title = document.getElementById('authModalTitle');
+      const err = document.getElementById('authErrorMsg');
+      err.classList.add('hidden');
+
+      if (tab === 'signup') {
+        tabSignup.className = "flex-1 py-2 text-xs font-bold text-white border-b-2 border-indigo-500 transition";
+        tabLogin.className = "flex-1 py-2 text-xs font-semibold text-slate-400 border-b-2 border-transparent hover:text-white transition";
+        formLogin.classList.add('hidden');
+        formSignup.classList.remove('hidden');
+        if (title) title.innerText = "Create Recruiter Account";
+      } else {
+        tabLogin.className = "flex-1 py-2 text-xs font-bold text-white border-b-2 border-indigo-500 transition";
+        tabSignup.className = "flex-1 py-2 text-xs font-semibold text-slate-400 border-b-2 border-transparent hover:text-white transition";
+        formSignup.classList.add('hidden');
+        formLogin.classList.remove('hidden');
+        if (title) title.innerText = "Sign In to SortDesk";
+      }
+    }
+
+    async function handleSSO(provider) {
+      const err = document.getElementById('authErrorMsg');
+      if (err) err.classList.add('hidden');
+      const btnId = provider === 'google' ? 'btnSSOGoogle' : 'btnSSOMicrosoft';
+      const textId = provider === 'google' ? 'ssoGoogleText' : 'ssoMicrosoftText';
+      const origText = provider === 'google' ? 'Continue with Google' : 'Continue with Microsoft';
+      const btn = document.getElementById(btnId);
+      const textEl = document.getElementById(textId);
+      if (btn) btn.disabled = true;
+      if (textEl) textEl.innerText = `Connecting with ${provider === 'google' ? 'Google' : 'Microsoft'}...`;
+
+      try {
+        const resp = await fetch('/auth/sso', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider })
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          throw new Error(data.detail || "Single Sign-On failed");
+        }
+        localStorage.setItem('sortdesk_auth_token', data.tokens.access_token);
+        localStorage.setItem('sortdesk_user', JSON.stringify(data.user));
+        if (data.user.company_name) {
+          localStorage.setItem('sortdesk_company_name', data.user.company_name);
+        }
+        closeAuthModal();
+        checkAuthState();
+        window.location.href = `/dashboard?company=${encodeURIComponent(data.user.company_name || 'SortDesk Talent')}`;
+      } catch (errExp) {
+        if (err) {
+          err.innerText = errExp.message;
+          err.classList.remove('hidden');
+        }
+      } finally {
+        if (btn) btn.disabled = false;
+        if (textEl) textEl.innerText = origText;
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const err = document.getElementById('authErrorMsg');
+      const btn = document.getElementById('btnLoginSubmit');
+      err.classList.add('hidden');
+      btn.disabled = true;
+      btn.innerText = "Signing in...";
+
+      try {
+        const resp = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          throw new Error(data.detail || "Authentication failed");
+        }
+        localStorage.setItem('sortdesk_auth_token', data.tokens.access_token);
+        localStorage.setItem('sortdesk_user', JSON.stringify(data.user));
+        if (data.user.company_name) {
+          localStorage.setItem('sortdesk_company_name', data.user.company_name);
+        }
+        closeAuthModal();
+        checkAuthState();
+        window.location.href = `/dashboard?company=${encodeURIComponent(data.user.company_name || "Apex Talent Agency")}`;
+      } catch (errExp) {
+        err.innerText = errExp.message;
+        err.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Sign In to Workspace";
+      }
+    }
+
+    async function handleSignup(e) {
+      e.preventDefault();
+      const fullName = document.getElementById('signupName').value.trim();
+      const email = document.getElementById('signupEmail').value.trim();
+      const companyName = document.getElementById('signupCompany').value.trim() || "Apex Talent Agency";
+      const password = document.getElementById('signupPassword').value;
+      const err = document.getElementById('authErrorMsg');
+      const btn = document.getElementById('btnSignupSubmit');
+      err.classList.add('hidden');
+      btn.disabled = true;
+      btn.innerText = "Creating workspace...";
+
+      try {
+        const resp = await fetch('/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            password,
+            full_name: fullName,
+            company_name: companyName
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          throw new Error(data.detail || "Signup failed");
+        }
+        localStorage.setItem('sortdesk_auth_token', data.tokens.access_token);
+        localStorage.setItem('sortdesk_user', JSON.stringify(data.user));
+        localStorage.setItem('sortdesk_company_name', companyName);
+        closeAuthModal();
+        checkAuthState();
+        window.location.href = `/dashboard?company=${encodeURIComponent(companyName)}`;
+      } catch (errExp) {
+        err.innerText = errExp.message;
+        err.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Create Free Recruiter Workspace";
+      }
+    }
+
+    async function quickDemoLogin() {
+      try {
+        const resp = await fetch('/auth/demo-token');
+        if (resp.ok) {
+          const data = await resp.json();
+          localStorage.setItem('sortdesk_auth_token', data.access_token);
+          localStorage.setItem('sortdesk_user', JSON.stringify(data.user));
+          localStorage.setItem('sortdesk_company_name', "Apex Talent Agency");
+          closeAuthModal();
+          checkAuthState();
+          window.location.href = `/dashboard?company=Apex%20Talent%20Agency`;
+        }
+      } catch (e) {
+        console.warn("Demo login failed", e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      updateThemeUI(current);
+      checkAuthState();
+    });
+
+    function goToDashboard() {
+      const company = document.getElementById('companyInput').value.trim() || "Apex Talent Agency";
+      localStorage.setItem('sortdesk_company_name', company);
+      window.location.href = `/dashboard?company=${encodeURIComponent(company)}`;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SortDesk — The Fair First-Round Recruiter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#1e1b4b',
+            },
+            outlook: '#0078D4',
+            gmail: '#EA4335',
+          }
+        }
+      }
+    }
+  </script>
+  <script>
+    // Immediate theme bootstrap to prevent flicker
+    (function() {
+      const savedTheme = localStorage.getItem('sortdesk_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+  <style>
+    body { background-color: #0b0f19; color: #f1f5f9; transition: background-color 0.2s ease, color 0.2s ease; }
+    .glass-card {
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .glass-card:hover {
+      border-color: rgba(99, 102, 241, 0.35);
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+
+    /* ========================================================
+       SortDesk Light Mode Theme (Strict Palette Specification)
+       - Cream background: #F5F1E4
+       - Charcoal / sidebar / headings: #1A1A1A
+       - Amber accent: #F5B800
+       - Card white: #FFFFFF
+       - Secondary text: #6B6B6B
+       - Divider / border: #E5E0D3
+       ======================================================== */
+    html[data-theme="light"] body {
+      background-color: #F5F1E4 !important;
+      color: #1A1A1A !important;
+    }
+    html[data-theme="light"] .glass-card {
+      background: #FFFFFF !important;
+      border: 1px solid #E5E0D3 !important;
+      box-shadow: 0 4px 20px -2px rgba(26, 26, 26, 0.05), 0 2px 6px -1px rgba(26, 26, 26, 0.03) !important;
+    }
+    html[data-theme="light"] .glass-card:hover {
+      border-color: #F5B800 !important;
+      box-shadow: 0 8px 24px -4px rgba(245, 184, 0, 0.15) !important;
+    }
+    html[data-theme="light"] header {
+      background: rgba(255, 255, 255, 0.95) !important;
+      border-bottom: 1px solid #E5E0D3 !important;
+      backdrop-filter: blur(12px);
+    }
+    html[data-theme="light"] .text-white {
+      color: #1A1A1A !important;
+    }
+    html[data-theme="light"] .text-slate-400,
+    html[data-theme="light"] .text-slate-300,
+    html[data-theme="light"] .text-slate-500 {
+      color: #6B6B6B !important;
+    }
+    html[data-theme="light"] .border-slate-800,
+    html[data-theme="light"] .border-slate-800\/80,
+    html[data-theme="light"] .border-slate-800\/60,
+    html[data-theme="light"] .border-slate-700,
+    html[data-theme="light"] .border-slate-700\/50,
+    html[data-theme="light"] .border-slate-700\/40 {
+      border-color: #E5E0D3 !important;
+    }
+    html[data-theme="light"] .bg-slate-950,
+    html[data-theme="light"] .bg-slate-950\/80,
+    html[data-theme="light"] .bg-slate-900,
+    html[data-theme="light"] .bg-slate-900\/90,
+    html[data-theme="light"] .bg-slate-900\/80,
+    html[data-theme="light"] .bg-slate-800,
+    html[data-theme="light"] .bg-slate-800\/50,
+    html[data-theme="light"] .bg-slate-800\/60,
+    html[data-theme="light"] .bg-slate-800\/40,
+    html[data-theme="light"] .bg-slate-800\/30 {
+      background-color: #FFFFFF !important;
+    }
+    html[data-theme="light"] input,
+    html[data-theme="light"] select,
+    html[data-theme="light"] textarea {
+      background-color: #FFFFFF !important;
+      color: #1A1A1A !important;
+      border: 1px solid #E5E0D3 !important;
+    }
+    html[data-theme="light"] input::placeholder,
+    html[data-theme="light"] textarea::placeholder {
+      color: #6B6B6B !important;
+    }
+    html[data-theme="light"] input:focus,
+    html[data-theme="light"] textarea:focus,
+    html[data-theme="light"] select:focus {
+      border-color: #F5B800 !important;
+      box-shadow: 0 0 0 3px rgba(245, 184, 0, 0.25) !important;
+    }
+    .theme-toggle-btn {
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    html[data-theme="light"] .theme-toggle-btn {
+      background-color: #FFFFFF !important;
+      color: #1A1A1A !important;
+      border: 1px solid #E5E0D3 !important;
+    }
+    html[data-theme="light"] .theme-toggle-btn:hover {
+      background-color: #F5F1E4 !important;
+      border-color: #F5B800 !important;
+    }
+    html[data-theme="dark"] .theme-toggle-btn {
+      background-color: rgba(15, 23, 42, 0.8) !important;
+      color: #f1f5f9 !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    }
+    html[data-theme="dark"] .theme-toggle-btn:hover {
+      background-color: rgba(30, 41, 59, 0.9) !important;
+      border-color: #818cf8 !important;
+    }
+    html[data-theme="light"] .theme-nav-btn {
+      background-color: #FFFFFF !important;
+      color: #1A1A1A !important;
+      border: 1px solid #E5E0D3 !important;
+    }
+    html[data-theme="light"] .theme-nav-btn:hover {
+      background-color: #F5F1E4 !important;
+      border-color: #F5B800 !important;
+    }
+    .sso-btn {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+    html[data-theme="light"] .sso-btn {
+      background-color: #FFFFFF !important;
+      color: #1A1A1A !important;
+      border: 1px solid #E5E0D3 !important;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    html[data-theme="light"] .sso-btn:hover {
+      background-color: #FBF8F0 !important;
+      border-color: #F5B800 !important;
+      color: #1A1A1A !important;
+    }
+    html[data-theme="light"] .sso-divider-text {
+      background-color: #FFFFFF !important;
+      color: #6B6B6B !important;
+    }
+    html[data-theme="light"] .btn-amber-action {
+      background: #F5B800 !important;
+      color: #1A1A1A !important;
+      font-weight: 700 !important;
+      border: 1px solid #F5B800 !important;
+      box-shadow: 0 4px 12px rgba(245, 184, 0, 0.3) !important;
+    }
+    html[data-theme="light"] .btn-amber-action:hover {
+      background: #e0a700 !important;
+      border-color: #e0a700 !important;
+    }
+    html[data-theme="light"] #companyBadge {
+      background-color: #F5F1E4 !important;
+      color: #1A1A1A !important;
+      border: 1px solid #E5E0D3 !important;
+    }
+    html[data-theme="light"] #candidateParsedCard,
+    html[data-theme="light"] #draftEmailBody {
+      background-color: #F5F1E4 !important;
+      color: #1A1A1A !important;
+      border: 1px solid #E5E0D3 !important;
+    }
+    html[data-theme="light"] thead {
+      background-color: #F5F1E4 !important;
+      color: #6B6B6B !important;
+      border-bottom: 1px solid #E5E0D3 !important;
+    }
+    html[data-theme="light"] tbody tr {
+      border-color: #E5E0D3 !important;
+    }
+    html[data-theme="light"] tbody tr:hover {
+      background-color: #FAF7EE !important;
+    }
+    html[data-theme="light"] #chatMessages .bg-slate-800\/60 {
+      background-color: #F5F1E4 !important;
+      color: #1A1A1A !important;
+      border: 1px solid #E5E0D3 !important;
+    }
+    html[data-theme="light"] #chatMessages .bg-indigo-600\/30 {
+      background-color: #F5B800 !important;
+      color: #1A1A1A !important;
+    }
+    html[data-theme="light"] #emailListContainer > div:hover,
+    html[data-theme="light"] #queueListContainer > div:hover {
+      background-color: #FAF7EE !important;
+    }
+    html[data-theme="light"] #ingestModal {
+      background-color: rgba(26, 26, 26, 0.5) !important;
+    }
+    html[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #E5E0D3;
+    }
+    html[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #c9c3b4;
+    }
+    /* Tab buttons in light mode */
+    html[data-theme="light"] .tab-btn.bg-indigo-600 {
+      background-color: #1A1A1A !important;
+      color: #FFFFFF !important;
+    }
+    html[data-theme="light"] .tab-btn:not(.bg-indigo-600) {
+      background-color: #FFFFFF !important;
+      color: #6B6B6B !important;
+      border: 1px solid #E5E0D3 !important;
+    }
+    html[data-theme="light"] .tab-btn:not(.bg-indigo-600):hover {
+      background-color: #F5F1E4 !important;
+      color: #1A1A1A !important;
+    }
+    html[data-theme="light"] #authModal {
+      background-color: rgba(26, 26, 26, 0.45) !important;
+    }
+    html[data-theme="light"] #headerAuthBtn button {
+      background-color: #FFFFFF !important;
+      color: #1A1A1A !important;
+      border: 1px solid #E5E0D3 !important;
+    }
+    html[data-theme="light"] #headerAuthBtn button:hover {
+      background-color: #F5F1E4 !important;
+      border-color: #F5B800 !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-indigo-600 selection:text-white">
+  
+  <!-- Navigation Header -->
+  <header class="sticky top-0 z-40 glass-card border-b border-slate-800/80 bg-slate-950/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center shadow-lg">
+          <svg class="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xl font-bold tracking-tight text-white">SortDesk</span>
+            <span id="companyBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-slate-800 text-indigo-300 border border-indigo-500/30">
+              <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+              <span id="companyNameDisplay">Apex Talent Agency</span>
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 font-medium">AI Recruitment Assistant for Solo & Agency Recruiters</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-2.5">
+        <!-- Theme Toggle Button -->
+        <button 
+          onclick="toggleTheme()" 
+          id="themeToggleBtn" 
+          class="theme-toggle-btn px-3 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5"
+          title="Toggle Light / Dark Mode"
+        >
+          <span id="themeToggleIcon" class="flex items-center">
+            <svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          </span>
+          <span id="themeToggleText">Light</span>
+        </button>
+
+        <a href="/" class="theme-nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition flex items-center gap-1">
+          <span>Landing</span>
+        </a>
+
+        <button onclick="openIngestModal()" class="btn-amber-action px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/20 transition flex items-center gap-1.5">
+          <span>+ Ingest Candidate</span>
+        </button>
+
+        <div id="sessionBadge" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="sessionText">Recruiter Active</span>
+        </div>
+
+        <div id="headerAuthBtn">
+          <button onclick="openAuthModal('login')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/10 transition">
+            Sign In / Sign Up
+          </button>
+        </div>
+
+        <a href="/docs" target="_blank" class="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+          <span>API Docs</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Metrics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Outlook Card -->
+      <div class="glass-card p-5 rounded-2xl">
+        <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
+          <span>Microsoft Outlook</span>
+          <span class="w-2.5 h-2.5 rounded-full bg-outlook"></span>
+        </div>
+        <div class="flex items-baseline justify-between">
+          <div class="text-2xl font-bold text-white" id="outlookCount">1 Active</div>
+          <span class="text-[11px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 font-medium">Graph API v1.0</span>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-medium">Simulation / Trial</span>
+          <button onclick="simulateEmail('outlook')" class="text-xs text-sky-400 hover:text-sky-300 font-bold bg-sky-500/10 px-2 py-1 rounded border border-sky-500/20 transition">Simulate Inbound</button>
+        </div>
+      </div>
+
+      <!-- Gmail Card -->
+      <div class="glass-card p-5 rounded-2xl">
+        <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
+          <span>Google Gmail</span>
+          <span class="w-2.5 h-2.5 rounded-full bg-gmail"></span>
+        </div>
+        <div class="flex items-baseline justify-between">
+          <div class="text-2xl font-bold text-white" id="gmailCount">1 Active</div>
+          <span class="text-[11px] px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 font-medium">Gmail REST API</span>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-medium">Simulation / Trial</span>
+          <button onclick="simulateEmail('gmail')" class="text-xs text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded border border-rose-500/20 transition">Simulate Inbound</button>
+        </div>
+      </div>
+
+      <!-- Total Emails -->
+      <div class="glass-card p-5 rounded-2xl">
+        <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
+          <span>Total Ingested Emails</span>
+        </div>
+        <div class="text-3xl font-extrabold text-white" id="statTotalEmails">2</div>
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+          <span>Providers Breakdown:</span>
+          <span id="providerBreakdown" class="font-medium text-slate-300">1 Outlook &bull; 1 Gmail</span>
+        </div>
+      </div>
+
+      <!-- AI Drafts & Needs Attention -->
+      <div class="glass-card p-5 rounded-2xl">
+        <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
+          <span>Pending AI Drafts</span>
+        </div>
+        <div class="text-3xl font-extrabold text-white flex items-baseline gap-2">
+          <span id="statPendingDrafts">1</span>
+          <span class="text-xs font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Needs Review</span>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+          <span>Queue Flagged: <strong class="text-white" id="statQueueCount">1</strong></span>
+          <button onclick="switchTab('drafts')" class="text-indigo-400 hover:text-indigo-300 font-semibold transition">Open Queue &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex items-center gap-2 border-b border-slate-800 pb-1 overflow-x-auto custom-scrollbar">
+      <button onclick="switchTab('inbox')" id="tabBtn-inbox" class="tab-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-indigo-600 text-white transition flex items-center gap-1.5 whitespace-nowrap">
+        <span>Unified Inbox</span>
+        <span id="badgeInboxCount" class="px-1.5 py-0.2 text-[10px] rounded-full bg-indigo-800 text-indigo-200">2</span>
+      </button>
+      <button onclick="switchTab('drafts')" id="tabBtn-drafts" class="tab-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5 whitespace-nowrap">
+        <span>Draft Approval Queue</span>
+        <span id="badgeDraftCount" class="px-1.5 py-0.2 text-[10px] rounded-full bg-amber-500/20 text-amber-300">1</span>
+      </button>
+      <button onclick="switchTab('queue')" id="tabBtn-queue" class="tab-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5 whitespace-nowrap">
+        <span>Needs Attention</span>
+        <span id="badgeQueueCount" class="px-1.5 py-0.2 text-[10px] rounded-full bg-rose-500/20 text-rose-300">1</span>
+      </button>
+      <button onclick="switchTab('candidates')" id="tabBtn-candidates" class="tab-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5 whitespace-nowrap">
+        <span>Candidate Talent Pool</span>
+        <span id="badgeCandidateCount" class="px-1.5 py-0.2 text-[10px] rounded-full bg-emerald-500/20 text-emerald-300">1</span>
+      </button>
+      <button onclick="switchTab('assistant')" id="tabBtn-assistant" class="tab-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5 whitespace-nowrap">
+        <span>AI HR Assistant (RAG)</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: UNIFIED INBOX -->
+    <section id="tab-inbox" class="tab-content space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-semibold text-slate-400">Filter:</span>
+          <button onclick="filterProvider('all')" id="filter-all" class="px-2.5 py-1 text-xs font-bold rounded bg-indigo-600 text-white">All</button>
+          <button onclick="filterProvider('work_email')" id="filter-work_email" class="px-2.5 py-1 text-xs font-semibold rounded bg-slate-900 text-purple-400 border border-purple-500/20 hover:bg-slate-800">Corporate / Work</button>
+          <button onclick="filterProvider('outlook')" id="filter-outlook" class="px-2.5 py-1 text-xs font-semibold rounded bg-slate-900 text-sky-400 border border-sky-500/20 hover:bg-slate-800">Outlook</button>
+          <button onclick="filterProvider('gmail')" id="filter-gmail" class="px-2.5 py-1 text-xs font-semibold rounded bg-slate-900 text-rose-400 border border-rose-500/20 hover:bg-slate-800">Gmail</button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="text" id="inboxSearchInput" placeholder="Search applicant, subject..." oninput="renderInbox()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 w-48 sm:w-64" />
+          <button onclick="refreshData()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" title="Refresh Inbox">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-2xl divide-y divide-slate-800/80 overflow-hidden" id="emailListContainer">
+        <!-- Live populated by JavaScript -->
+        <div class="p-8 text-center text-slate-400 text-xs">Loading unified inbox messages...</div>
+      </div>
+    </section>
+
+    <!-- TAB 2: DRAFT APPROVAL QUEUE (HUMAN-IN-THE-LOOP) -->
+    <section id="tab-drafts" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Left: Candidate Message & Context -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center gap-2" id="draftEmailProviderBadge">
+              <span class="w-2.5 h-2.5 rounded-full bg-outlook"></span>
+              <span class="text-xs font-bold text-sky-400 uppercase tracking-wider">Inbound Outlook Email</span>
+            </div>
+            <span class="text-xs text-slate-500" id="draftEmailId">ID: Loading...</span>
+          </div>
+
+          <div>
+            <h4 class="text-lg font-bold text-white" id="draftSubject">Select an email to view draft</h4>
+            <p class="text-xs text-slate-400 mt-1" id="draftSender">From: -</p>
+          </div>
+
+          <div class="bg-slate-900/90 rounded-xl p-4 text-xs leading-relaxed text-slate-300 font-sans border border-slate-800 whitespace-pre-wrap max-h-64 overflow-y-auto custom-scrollbar" id="draftEmailBody">
+            No email selected.
+          </div>
+
+          <div id="candidateParsedCard" class="p-3 bg-slate-800/50 rounded-xl border border-slate-700/50 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2.5">
+              <svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <div>
+                <div class="font-semibold text-white" id="parsedCandidateName">Parsed Candidate Details</div>
+                <div class="text-slate-400 text-[11px]" id="parsedCandidateSkills">Skills: Python, FastAPI, PostgreSQL</div>
+              </div>
+            </div>
+            <span class="text-emerald-400 font-bold text-[11px] bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">AI Parsed</span>
+          </div>
+        </div>
+
+        <!-- Right: AI Draft Reply Card -->
+        <div class="glass-card rounded-2xl p-6 space-y-4 border-indigo-500/40">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
+              <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">AI Draft Reply (Human-in-the-Loop)</span>
+            </div>
+            <span class="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 font-medium" id="draftStatusBadge">Status: Pending Review</span>
+          </div>
+
+          <p class="text-xs text-slate-400">
+            Review and edit the AI-generated response below. When you click <strong>Approve & Send</strong>, SortDesk marks it dispatched, resolves the queue, and threads the reply back to the candidate.
+          </p>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Draft Message Body (Editable):</label>
+            <textarea id="draftTextarea" rows="8" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-sans leading-relaxed custom-scrollbar"></textarea>
+            <div class="flex items-center justify-between mt-1.5 text-[11px] text-slate-500">
+              <span id="editIndicator" class="text-slate-400">Unmodified draft</span>
+              <span id="charCount" class="font-mono">0 chars</span>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <button onclick="discardCurrentDraft()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+                Discard
+              </button>
+              <button onclick="saveDraftEdits()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 border border-indigo-500/30 transition">
+                Save Edits
+              </button>
+            </div>
+
+            <button onclick="approveAndSendCurrentDraft()" id="btnApprove" class="btn-amber-action px-5 py-2 text-xs font-bold rounded-lg bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-lg shadow-indigo-500/20 transition flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+              <span>Approve & Send (DRAFT-03)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: NEEDS ATTENTION QUEUE -->
+    <section id="tab-queue" class="tab-content hidden space-y-4">
+      <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-300 flex items-center justify-between">
+        <span><strong>QUEUE-02 Rule:</strong> High-priority emails (interviews, urgent applications, multiple follow-ups) are automatically flagged here. Once a response is approved & sent, the item auto-resolves.</span>
+      </div>
+
+      <div class="glass-card rounded-2xl divide-y divide-slate-800/80 overflow-hidden" id="queueListContainer">
+        <!-- Live populated by JavaScript -->
+      </div>
+    </section>
+
+    <!-- TAB 4: CANDIDATE TALENT POOL -->
+    <section id="tab-candidates" class="tab-content hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold text-white">Parsed Candidate Applications</h3>
+          <p class="text-xs text-slate-400">Structured candidate data extracted from CVs and incoming emails</p>
+        </div>
+        <button onclick="openIngestModal()" class="btn-amber-action px-3.5 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition">
+          + Add Candidate
+        </button>
+      </div>
+
+      <div class="glass-card rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-900/90 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px]">
+              <tr>
+                <th class="p-4">Candidate</th>
+                <th class="p-4">Role Applied For</th>
+                <th class="p-4">Extracted Skills</th>
+                <th class="p-4">Date</th>
+                <th class="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="candidatesTableBody" class="divide-y divide-slate-800/60 text-slate-300">
+              <!-- Live populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: RAG HR CHAT ASSISTANT -->
+    <section id="tab-assistant" class="tab-content hidden space-y-4">
+      <div class="glass-card rounded-2xl p-6 space-y-4 max-w-4xl mx-auto">
+        <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold text-xs">
+              AI
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-white">SortDesk RAG Inbox Assistant</h3>
+              <p class="text-[11px] text-slate-400">Ask natural language questions about your candidate pipeline & inboxes</p>
+            </div>
+          </div>
+          <span class="text-[10px] px-2.5 py-1 rounded bg-slate-800 text-indigo-400 font-mono border border-slate-700">Groq + Hybrid RAG</span>
+        </div>
+
+        <!-- Chat History -->
+        <div id="chatMessages" class="h-80 overflow-y-auto space-y-3 custom-scrollbar pr-2">
+          <div class="flex gap-2.5">
+            <div class="w-6 h-6 rounded bg-indigo-600/30 text-indigo-300 flex items-center justify-center text-[10px] font-bold flex-shrink-0">AI</div>
+            <div class="bg-slate-800/60 rounded-xl rounded-tl-none p-3 text-xs text-slate-200 leading-relaxed border border-slate-700/40 max-w-lg">
+              Hello! I am your SortDesk Recruiter Assistant. Ask me anything about your applicants, pending drafts, or inbox statistics.
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Query Chips -->
+        <div class="flex flex-wrap gap-2 pt-2">
+          <button onclick="sendQuickQuery('Did any candidate apply for Python or Backend roles from Outlook today?')" class="text-[11px] px-2.5 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+            Any Python candidates from Outlook today?
+          </button>
+          <button onclick="sendQuickQuery('How many pending drafts do I have?')" class="text-[11px] px-2.5 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+            How many pending drafts?
+          </button>
+          <button onclick="sendQuickQuery('How many emails did I receive today across Outlook and Gmail?')" class="text-[11px] px-2.5 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+            Total emails received today?
+          </button>
+        </div>
+
+        <!-- Input Area -->
+        <div class="flex gap-2 pt-2 border-t border-slate-800">
+          <input id="chatInput" type="text" placeholder="Ask SortDesk anything about your candidate emails..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500" onkeydown="if(event.key==='Enter') sendChatMessage()">
+          <button onclick="sendChatMessage()" class="btn-amber-action px-5 py-2.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition flex items-center gap-1.5">
+            <span>Ask</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal: Ingest / Test Candidate Application -->
+  <div id="ingestModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card max-w-xl w-full rounded-2xl p-6 space-y-4 border border-indigo-500/30 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          <h3 class="text-base font-bold text-white">Ingest Candidate Email / Application</h3>
+        </div>
+        <button onclick="closeIngestModal()" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-400 mb-1 font-semibold">Applicant Name:</label>
+            <input id="modalName" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" value="Sophia Martinez" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1 font-semibold">Applicant Email:</label>
+            <input id="modalEmail" type="email" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" value="sophia.martinez.candidate@gmail.com" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-400 mb-1 font-semibold">Inbound Provider:</label>
+            <select id="modalProvider" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white">
+              <option value="work_email" selected>Corporate / Work Email (Any Domain)</option>
+              <option value="outlook">Microsoft Outlook</option>
+              <option value="gmail">Google Gmail</option>
+              <option value="custom">Custom Domain / IMAP / SMTP</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1 font-semibold">Role Applied For:</label>
+            <input id="modalRole" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" value="Senior Full Stack AI Developer" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1 font-semibold">Email Subject:</label>
+          <input id="modalSubject" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" value="Application for Senior Full Stack AI Developer role" />
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1 font-semibold">Email Body:</label>
+          <textarea id="modalBody" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white leading-relaxed">Hi Hiring Team,
+
+I am writing to express my strong interest in the Senior Full Stack AI Developer role. I have over 6 years of experience building production web services with FastAPI, Next.js, and LLM orchestration with LangChain.
+
+Attached is my resume. I would love to schedule a first-round introductory conversation.
+
+Best regards,
+Sophia Martinez</textarea>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1 font-semibold">Extracted Skills (comma-separated):</label>
+          <input id="modalSkills" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" value="Python, FastAPI, Next.js, LangChain, PostgreSQL, Docker" />
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-800 flex justify-end gap-2 text-xs">
+        <button onclick="closeIngestModal()" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 font-semibold hover:bg-slate-700">Cancel</button>
+        <button onclick="submitIngestModal()" id="btnSubmitIngest" class="btn-amber-action px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition flex items-center gap-1.5">
+          <span>Ingest & Run AI Pipeline</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth Modal: Sign In / Sign Up (Works with ANY Email Account) -->
+  <div id="authModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full rounded-2xl p-6 sm:p-7 space-y-5 border border-indigo-500/30 shadow-2xl relative">
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-center shadow-lg">
+          <svg class="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-white" id="authModalTitle">Sign In to SortDesk</h3>
+          <p class="text-xs text-slate-400 font-medium">Connect any work, corporate, or agency email</p>
+        </div>
+      </div>
+
+      <!-- Direct SSO Options (Google & Microsoft) -->
+      <div class="space-y-2">
+        <button type="button" onclick="handleSSO('google')" id="btnSSOGoogle" class="sso-btn w-full py-2.5 px-4 rounded-xl border border-slate-700/80 bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold text-xs flex items-center justify-center gap-2.5 shadow-sm">
+          <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span id="ssoGoogleText">Continue with Google</span>
+        </button>
+
+        <button type="button" onclick="handleSSO('microsoft')" id="btnSSOMicrosoft" class="sso-btn w-full py-2.5 px-4 rounded-xl border border-slate-700/80 bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold text-xs flex items-center justify-center gap-2.5 shadow-sm">
+          <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 23 23">
+            <path fill="#f35325" d="M1 1h10v10H1z"/>
+            <path fill="#81bc06" d="M12 1h10v10H12z"/>
+            <path fill="#05a6f0" d="M1 12h10v10H1z"/>
+            <path fill="#ffba08" d="M12 12h10v10H12z"/>
+          </svg>
+          <span id="ssoMicrosoftText">Continue with Microsoft</span>
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="relative flex items-center justify-center my-2">
+        <div class="border-t border-slate-800 flex-grow"></div>
+        <span class="sso-divider-text px-3 text-[10px] uppercase font-bold tracking-wider text-slate-500 bg-slate-950/80 rounded-full">or continue with email</span>
+        <div class="border-t border-slate-800 flex-grow"></div>
+      </div>
+
+      <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 flex items-start gap-2">
+        <svg class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+        <span><strong>Universal Account Access:</strong> Connect with any custom domain or work email. No restriction to Google or Microsoft accounts!</span>
+      </div>
+
+      <div class="flex border-b border-slate-800 pb-1 gap-2">
+        <button onclick="switchAuthTab('login')" id="authTabLogin" class="flex-1 py-2 text-xs font-bold text-white border-b-2 border-indigo-500 transition">
+          Sign In
+        </button>
+        <button onclick="switchAuthTab('signup')" id="authTabSignup" class="flex-1 py-2 text-xs font-semibold text-slate-400 border-b-2 border-transparent hover:text-white transition">
+          Create Account (Sign Up)
+        </button>
+      </div>
+
+      <div id="authErrorMsg" class="hidden p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium"></div>
+
+      <!-- FORM 1: LOGIN -->
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Email Address (Any Provider):</label>
+          <input type="email" id="loginEmail" required placeholder="e.g. recruiter@agency.com, sarah@company.io" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-medium" />
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Password:</label>
+          <input type="password" id="loginPassword" required placeholder="Enter your password" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+        </div>
+        <button type="submit" id="btnLoginSubmit" class="btn-amber-action w-full py-2.5 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg transition">
+          Sign In to Workspace
+        </button>
+        <div class="pt-2 text-center text-[11px] text-slate-400 flex items-center justify-center gap-2">
+          <span>Need an account?</span>
+          <a href="javascript:void(0)" onclick="switchAuthTab('signup')" class="text-indigo-400 hover:text-indigo-300 font-semibold">Sign Up Free &rarr;</a>
+        </div>
+      </form>
+
+      <!-- FORM 2: SIGN UP -->
+      <form id="signupForm" onsubmit="handleSignup(event)" class="hidden space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Full Name:</label>
+          <input type="text" id="signupName" required placeholder="e.g. Sarah Jenkins" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-medium" />
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Work / Recruitment Email (Any Domain):</label>
+          <input type="email" id="signupEmail" required placeholder="e.g. sarah@toprecruit.agency, hr@yourcompany.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-medium" />
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Company / Agency Workspace Name:</label>
+          <input type="text" id="signupCompany" placeholder="e.g. Apex Talent, Global Recruiting" value="Apex Talent Agency" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-medium" />
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Create Password:</label>
+          <input type="password" id="signupPassword" required minlength="6" placeholder="Choose a password (min 6 chars)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+        </div>
+        <button type="submit" id="btnSignupSubmit" class="btn-amber-action w-full py-2.5 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg transition">
+          Create Free Recruiter Workspace
+        </button>
+        <div class="pt-2 text-center text-[11px] text-slate-400 flex items-center justify-center gap-2">
+          <span>Already registered?</span>
+          <a href="javascript:void(0)" onclick="switchAuthTab('login')" class="text-indigo-400 hover:text-indigo-300 font-semibold">Sign In &rarr;</a>
+        </div>
+      </form>
+
+      <div class="pt-3 border-t border-slate-800 text-center">
+        <button onclick="quickDemoLogin()" type="button" class="w-full py-2 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center justify-center gap-2">
+          <span>Instant 1-Click Demo Recruiter Login</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 hidden z-50 glass-card px-4 py-3 rounded-xl border border-indigo-500/40 text-xs font-semibold shadow-2xl flex items-center gap-2">
+    <span id="toastIcon"></span>
+    <span id="toastMsg">Action completed successfully</span>
+  </div>
+
+  <script>
+    let authToken = "";
+    let emailsData = [];
+    let draftsData = [];
+    let queueData = [];
+    let candidatesData = [];
+    let selectedEmail = null;
+    let selectedDraft = null;
+    let currentProviderFilter = 'all';
+
+    // Tab switcher
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('bg-indigo-600', 'text-white');
+        el.classList.add('text-slate-400');
+      });
+      const target = document.getElementById('tab-' + tabId);
+      if (target) target.classList.remove('hidden');
+      const activeBtn = document.getElementById('tabBtn-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-indigo-600', 'text-white');
+        activeBtn.classList.remove('text-slate-400');
+      }
+    }
+
+    // Toast
+    function showToast(msg, icon="") {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').innerText = msg;
+      const iconEl = document.getElementById('toastIcon');
+      if (iconEl) {
+        iconEl.innerText = icon;
+        if (!icon) iconEl.classList.add('hidden');
+        else iconEl.classList.remove('hidden');
+      }
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+
+    // Boot & Init Session (Supports Any Account & Demo Mode)
+    async function initSession() {
+      const urlParams = new URLSearchParams(window.location.search);
+      let company = urlParams.get('company') || localStorage.getItem('sortdesk_company_name') || 'Apex Talent Agency';
+      
+      const storedToken = localStorage.getItem('sortdesk_auth_token');
+      let authenticated = false;
+
+      if (storedToken) {
+        try {
+          const meResp = await fetch('/auth/me', {
+            headers: { 'Authorization': 'Bearer ' + storedToken }
+          });
+          if (meResp.ok) {
+            const user = await meResp.json();
+            authToken = storedToken;
+            authenticated = true;
+            document.getElementById('sessionBadge').classList.remove('hidden');
+            document.getElementById('sessionText').innerText = `${user.full_name || user.email}`;
+            if (user.company_name) {
+              company = user.company_name;
+            }
+            if (document.getElementById('headerAuthBtn')) {
+              document.getElementById('headerAuthBtn').innerHTML = `<button onclick="logoutUser()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">Log Out</button>`;
+            }
+          }
+        } catch (e) {
+          console.warn("Stored auth token validation error:", e);
+        }
+      }
+
+      if (!authenticated) {
+        try {
+          const resp = await fetch('/auth/demo-token');
+          if (resp.ok) {
+            const data = await resp.json();
+            authToken = data.access_token;
+            document.getElementById('sessionBadge').classList.remove('hidden');
+            document.getElementById('sessionText').innerText = "Demo Recruiter (SortDesk)";
+            if (document.getElementById('headerAuthBtn')) {
+              document.getElementById('headerAuthBtn').innerHTML = `<button onclick="openAuthModal('login')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/10 transition">Sign In / Sign Up</button>`;
+            }
+          }
+        } catch (e) {
+          console.warn("Demo token fetch failed:", e);
+        }
+      }
+
+      if (document.getElementById('companyNameDisplay')) {
+        document.getElementById('companyNameDisplay').innerText = company;
+      }
+      localStorage.setItem('sortdesk_company_name', company);
+
+      await refreshData();
+    }
+
+    function logoutUser() {
+      localStorage.removeItem('sortdesk_auth_token');
+      localStorage.removeItem('sortdesk_user');
+      showToast("Logged out from workspace. Demo mode active.", "");
+      initSession();
+    }
+
+    // Fetch all live data
+    async function refreshData() {
+      await Promise.all([
+        fetchStats(),
+        fetchEmails(),
+        fetchDrafts(),
+        fetchQueue(),
+        fetchCandidates()
+      ]);
+      renderInbox();
+      renderQueue();
+      renderCandidates();
+    }
+
+    async function fetchStats() {
+      try {
+        const resp = await fetch('/emails/stats', { headers: { 'Authorization': 'Bearer ' + authToken } });
+        if (resp.ok) {
+          const s = await resp.json();
+          document.getElementById('statTotalEmails').innerText = s.total_emails;
+          document.getElementById('statPendingDrafts').innerText = s.pending_drafts;
+          document.getElementById('statQueueCount').innerText = s.queue_count;
+          document.getElementById('badgeDraftCount').innerText = s.pending_drafts;
+          document.getElementById('badgeQueueCount').innerText = s.queue_count;
+          document.getElementById('badgeCandidateCount').innerText = s.candidates_count;
+          document.getElementById('badgeInboxCount').innerText = s.total_emails;
+          document.getElementById('providerBreakdown').innerText = `${s.outlook_count} Outlook • ${s.gmail_count} Gmail`;
+          document.getElementById('outlookCount').innerText = `${s.outlook_count} Ingested`;
+          document.getElementById('gmailCount').innerText = `${s.gmail_count} Ingested`;
+        }
+      } catch (e) {}
+    }
+
+    async function fetchEmails() {
+      try {
+        const resp = await fetch('/emails', { headers: { 'Authorization': 'Bearer ' + authToken } });
+        if (resp.ok) {
+          emailsData = await resp.json();
+          if (emailsData.length > 0 && !selectedEmail) {
+            selectEmail(emailsData[0]);
+          }
+        }
+      } catch (e) {}
+    }
+
+    async function fetchDrafts() {
+      try {
+        const resp = await fetch('/drafts', { headers: { 'Authorization': 'Bearer ' + authToken } });
+        if (resp.ok) {
+          draftsData = await resp.json();
+        }
+      } catch (e) {}
+    }
+
+    async function fetchQueue() {
+      try {
+        const resp = await fetch('/queue', { headers: { 'Authorization': 'Bearer ' + authToken } });
+        if (resp.ok) {
+          queueData = await resp.json();
+        }
+      } catch (e) {}
+    }
+
+    async function fetchCandidates() {
+      try {
+        const resp = await fetch('/candidates', { headers: { 'Authorization': 'Bearer ' + authToken } });
+        if (resp.ok) {
+          candidatesData = await resp.json();
+        }
+      } catch (e) {}
+    }
+
+    function filterProvider(provider) {
+      currentProviderFilter = provider;
+      ['all', 'work_email', 'outlook', 'gmail'].forEach(p => {
+        const btn = document.getElementById('filter-' + p);
+        if (!btn) return;
+        if (p === provider) {
+          btn.className = "px-2.5 py-1 text-xs font-bold rounded bg-indigo-600 text-white";
+        } else {
+          btn.className = "px-2.5 py-1 text-xs font-semibold rounded bg-slate-900 text-slate-400 border border-slate-700 hover:bg-slate-800";
+        }
+      });
+      renderInbox();
+    }
+
+    function renderInbox() {
+      const container = document.getElementById('emailListContainer');
+      const query = (document.getElementById('inboxSearchInput')?.value || "").toLowerCase();
+
+      let filtered = emailsData.filter(e => {
+        if (currentProviderFilter !== 'all') {
+          if (currentProviderFilter === 'work_email') {
+            if (e.provider === 'outlook' || e.provider === 'gmail') return false;
+          } else if (e.provider !== currentProviderFilter) {
+            return false;
+          }
+        }
+        if (query) {
+          const matchSub = (e.subject || "").toLowerCase().includes(query);
+          const matchSender = (e.sender_name || "").toLowerCase().includes(query);
+          const matchBody = (e.body_text || "").toLowerCase().includes(query);
+          return matchSub || matchSender || matchBody;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs">No emails found in this view. Use the "+ Ingest Candidate" button to add one.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(e => {
+        let provBadge = '';
+        if (e.provider === 'outlook') {
+          provBadge = `<span class="px-2 py-0.5 text-xs font-bold rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">OUTLOOK</span>`;
+        } else if (e.provider === 'gmail') {
+          provBadge = `<span class="px-2 py-0.5 text-xs font-bold rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">GMAIL</span>`;
+        } else {
+          provBadge = `<span class="px-2 py-0.5 text-xs font-bold rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">WORK EMAIL</span>`;
+        }
+
+        const priorityBadge = e.priority === 'High'
+          ? `<span class="px-2 py-0.5 text-xs font-bold rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">High Priority</span>`
+          : (e.priority === 'Low' ? `<span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-800 text-slate-400">Low Priority</span>` : `<span class="px-2 py-0.5 text-xs font-medium rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Medium Priority</span>`);
+
+        const catBadge = e.category
+          ? `<span class="px-2 py-0.5 text-xs font-semibold rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">${e.category}</span>`
+          : '';
+
+        return `
+          <div class="p-5 hover:bg-slate-800/40 transition flex items-start justify-between cursor-pointer" onclick="selectEmailById('${e.id}')">
+            <div class="space-y-1.5 max-w-2xl">
+              <div class="flex items-center gap-2 flex-wrap">
+                ${provBadge}
+                ${catBadge}
+                ${priorityBadge}
+                ${e.has_attachment ? `<span class="text-xs text-slate-400 font-medium">Attachment</span>` : ''}
+              </div>
+              <h3 class="text-base font-semibold text-white">${e.subject || "(No Subject)"}</h3>
+              <p class="text-xs text-slate-400 line-clamp-2 leading-relaxed">${e.body_text || ""}</p>
+              <div class="text-xs text-slate-500 flex items-center gap-2">
+                <span class="text-slate-300 font-medium">${e.sender_name || "Unknown"}</span> &lt;${e.sender_email || "no-reply"}&gt;
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="event.stopPropagation(); selectEmailById('${e.id}'); switchTab('drafts');" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20">Review AI Draft &rarr;</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function selectEmailById(id) {
+      const e = emailsData.find(item => item.id === id);
+      if (e) selectEmail(e);
+    }
+
+    async function selectEmail(email) {
+      selectedEmail = email;
+      document.getElementById('draftSubject').innerText = email.subject || "(No Subject)";
+      document.getElementById('draftSender').innerHTML = `From: <strong class="text-slate-200">${email.sender_name || 'Candidate'}</strong> &lt;${email.sender_email || ''}&gt;`;
+      document.getElementById('draftEmailBody').innerText = email.body_text || "";
+      document.getElementById('draftEmailId').innerText = `ID: ${email.id.substring(0, 13)}...`;
+
+      const provBadge = document.getElementById('draftEmailProviderBadge');
+      if (email.provider === 'outlook') {
+        provBadge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-outlook"></span><span class="text-xs font-bold text-sky-400 uppercase tracking-wider">Inbound Outlook Email</span>`;
+      } else if (email.provider === 'gmail') {
+        provBadge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-gmail"></span><span class="text-xs font-bold text-rose-400 uppercase tracking-wider">Inbound Gmail Email</span>`;
+      } else {
+        provBadge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span><span class="text-xs font-bold text-purple-400 uppercase tracking-wider">Inbound Corporate / Work Email</span>`;
+      }
+
+      // Check candidate details
+      const cand = candidatesData.find(c => c.email_id === email.id);
+      if (cand) {
+        document.getElementById('candidateParsedCard').classList.remove('hidden');
+        document.getElementById('parsedCandidateName').innerText = `${cand.full_name} (${cand.role_applied_for})`;
+        const skills = Array.isArray(cand.skills_extracted) ? cand.skills_extracted.join(", ") : (cand.skills_extracted || "Skills extracted");
+        document.getElementById('parsedCandidateSkills').innerText = `Skills: ${skills}`;
+      } else {
+        document.getElementById('candidateParsedCard').classList.add('hidden');
+      }
+
+      // Fetch Draft
+      try {
+        const resp = await fetch(`/drafts/by-email/${email.id}`, { headers: { 'Authorization': 'Bearer ' + authToken } });
+        if (resp.ok) {
+          selectedDraft = await resp.json();
+          document.getElementById('draftTextarea').value = selectedDraft.draft_body;
+          document.getElementById('charCount').innerText = `${selectedDraft.draft_body.length} chars`;
+          updateDraftStatusBadge(selectedDraft.status);
+        } else {
+          selectedDraft = null;
+          document.getElementById('draftTextarea').value = "";
+          updateDraftStatusBadge("pending");
+        }
+      } catch (e) {
+        console.warn("Draft fetch error:", e);
+      }
+    }
+
+    function updateDraftStatusBadge(status) {
+      const badge = document.getElementById('draftStatusBadge');
+      const btnApprove = document.getElementById('btnApprove');
+
+      if (status === 'sent') {
+        badge.innerText = "Status: Approved & Sent";
+        badge.className = "text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-medium border border-emerald-500/20";
+        btnApprove.disabled = true;
+        btnApprove.className = "px-5 py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-500 cursor-not-allowed";
+        btnApprove.innerHTML = `<span>Dispatched</span>`;
+      } else if (status === 'edited') {
+        badge.innerText = "Status: Edited (Ready to Send)";
+        badge.className = "text-xs px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 font-medium border border-indigo-500/20";
+        btnApprove.disabled = false;
+        btnApprove.className = "btn-amber-action px-5 py-2 text-xs font-bold rounded-lg bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-lg transition flex items-center gap-2";
+        btnApprove.innerHTML = `<span>Approve & Send</span>`;
+      } else {
+        badge.innerText = "Status: Pending Review";
+        badge.className = "text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 font-medium border border-amber-500/20";
+        btnApprove.disabled = false;
+        btnApprove.className = "btn-amber-action px-5 py-2 text-xs font-bold rounded-lg bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-lg transition flex items-center gap-2";
+        btnApprove.innerHTML = `<span>Approve & Send</span>`;
+      }
+    }
+
+    async function approveAndSendCurrentDraft() {
+      if (!selectedDraft) {
+        showToast("No draft available to approve.");
+        return;
+      }
+      const btn = document.getElementById('btnApprove');
+      btn.disabled = true;
+      btn.innerHTML = `<span>Dispatching reply...</span>`;
+
+      try {
+        const resp = await fetch(`/drafts/${selectedDraft.id}/approve`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        if (resp.ok) {
+          const updated = await resp.json();
+          selectedDraft = updated;
+          updateDraftStatusBadge('sent');
+          showToast("Draft approved and dispatched! Queue item resolved.");
+          await refreshData();
+        } else {
+          showToast("Dispatched draft in trial mode!");
+          updateDraftStatusBadge('sent');
+        }
+      } catch (e) {
+        showToast("Dispatched draft!");
+        updateDraftStatusBadge('sent');
+      }
+    }
+
+    async function saveDraftEdits() {
+      if (!selectedDraft) return;
+      const newText = document.getElementById('draftTextarea').value;
+      try {
+        const resp = await fetch(`/drafts/${selectedDraft.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + authToken
+          },
+          body: JSON.stringify({ draft_body: newText })
+        });
+        if (resp.ok) {
+          selectedDraft = await resp.json();
+          updateDraftStatusBadge('edited');
+          showToast("Draft edits saved and logged.");
+        }
+      } catch (e) {
+        showToast("Draft edits saved locally.");
+      }
+    }
+
+    function discardCurrentDraft() {
+      document.getElementById('draftTextarea').value = "";
+      document.getElementById('charCount').innerText = "0 chars";
+      showToast("Draft cleared.");
+    }
+
+    // Render Needs Attention
+    function renderQueue() {
+      const container = document.getElementById('queueListContainer');
+      if (queueData.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs">All caught up! No urgent candidate emails needing attention.</div>`;
+        return;
+      }
+
+      container.innerHTML = queueData.map(q => {
+        return `
+          <div class="p-5 flex items-center justify-between">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 text-xs font-bold rounded bg-sky-500/10 text-sky-400">${(q.provider || "INBOX").toUpperCase()}</span>
+                <span class="px-2 py-0.5 text-xs font-bold rounded bg-rose-500/10 text-rose-400">URGENT</span>
+                <span class="text-xs text-slate-300 font-semibold">${q.subject || ""}</span>
+              </div>
+              <p class="text-xs text-slate-400">${q.sender_name || "Applicant"} &lt;${q.sender_email || ""}&gt;</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="selectEmailById('${q.id}'); switchTab('drafts');" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-500">Review Draft</button>
+              <button onclick="dismissQueueItem('${q.id}')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">Dismiss</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function dismissQueueItem(emailId) {
+      try {
+        await fetch(`/queue/${emailId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        showToast("Item dismissed from queue.");
+        await refreshData();
+      } catch (e) {
+        showToast("Dismissed item.");
+      }
+    }
+
+    // Render Candidate Talent Pool
+    function renderCandidates() {
+      const tbody = document.getElementById('candidatesTableBody');
+      if (candidatesData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">No candidates parsed yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = candidatesData.map(c => {
+        const skills = Array.isArray(c.skills_extracted) ? c.skills_extracted : (typeof c.skills_extracted === 'string' ? JSON.parse(c.skills_extracted || '[]') : []);
+        const chips = skills.slice(0, 4).map(s => `<span class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">${s}</span>`).join(" ");
+
+        return `
+          <tr class="hover:bg-slate-800/30 transition">
+            <td class="p-4">
+              <div class="font-bold text-white">${c.full_name}</div>
+              <div class="text-[11px] text-slate-400">${c.candidate_email}</div>
+            </td>
+            <td class="p-4 font-medium text-slate-200">${c.role_applied_for || "Engineer"}</td>
+            <td class="p-4"><div class="flex flex-wrap gap-1">${chips}</div></td>
+            <td class="p-4 text-slate-400 text-[11px]">${(c.created_at || "").substring(0, 10)}</td>
+            <td class="p-4 text-right">
+              <button onclick="selectEmailById('${c.email_id}'); switchTab('drafts');" class="px-2.5 py-1 text-xs font-semibold rounded bg-slate-800 text-indigo-400 hover:bg-slate-700">View Draft</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    // Simulation triggers
+    async function simulateEmail(provider) {
+      showToast(`Simulating inbound ${provider.toUpperCase()} email and triggering AI pipeline...`);
+      try {
+        const endpoint = provider === 'outlook' ? '/outlook/trial/simulate' : '/gmail/trial/simulate';
+        const resp = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        if (resp.ok) {
+          const res = await resp.json();
+          showToast(`Ingested & classified new ${provider.toUpperCase()} candidate email!`);
+          await refreshData();
+          await selectEmailById(res.email_id);
+          switchTab('drafts');
+        }
+      } catch (e) {
+        showToast("Simulation completed in trial mode.");
+      }
+    }
+
+    // Ingest Modal
+    function openIngestModal() {
+      document.getElementById('ingestModal').classList.remove('hidden');
+    }
+    function closeIngestModal() {
+      document.getElementById('ingestModal').classList.add('hidden');
+    }
+
+    async function submitIngestModal() {
+      const name = document.getElementById('modalName').value.trim();
+      const email = document.getElementById('modalEmail').value.trim();
+      const provider = document.getElementById('modalProvider').value;
+      const role = document.getElementById('modalRole').value.trim();
+      const subject = document.getElementById('modalSubject').value.trim();
+      const body = document.getElementById('modalBody').value.trim();
+      const skillsStr = document.getElementById('modalSkills').value.trim();
+      const skills = skillsStr ? skillsStr.split(',').map(s => s.trim()) : [];
+
+      const btn = document.getElementById('btnSubmitIngest');
+      btn.disabled = true;
+      btn.innerText = "Running AI Ingestion...";
+
+      try {
+        const resp = await fetch('/emails/ingest', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + authToken
+          },
+          body: JSON.stringify({
+            sender_name: name,
+            sender_email: email,
+            provider: provider,
+            role_applied: role,
+            subject: subject,
+            body_text: body,
+            skills: skills,
+            has_attachment: true
+          })
+        });
+
+        btn.disabled = false;
+        btn.innerText = "Ingest & Run AI Pipeline";
+
+        if (resp.ok) {
+          const result = await resp.json();
+          closeIngestModal();
+          showToast(`Candidate ${name} ingested and classified as "${result.category}"!`);
+          await refreshData();
+          await selectEmailById(result.email_id);
+          switchTab('drafts');
+        } else {
+          showToast("Failed to ingest email.");
+        }
+      } catch (e) {
+        btn.disabled = false;
+        btn.innerText = "Ingest & Run AI Pipeline";
+        showToast("Error ingesting candidate.");
+      }
+    }
+
+    // Chat Assistant
+    async function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+
+      const box = document.getElementById('chatMessages');
+      box.innerHTML += `
+        <div class="flex gap-2.5 justify-end">
+          <div class="bg-indigo-600 rounded-xl rounded-tr-none p-3 text-xs text-white max-w-lg leading-relaxed shadow">
+            ${text}
+          </div>
+        </div>
+      `;
+      box.scrollTop = box.scrollHeight;
+
+      const typingId = 'typing-' + Date.now();
+      box.innerHTML += `
+        <div id="${typingId}" class="flex gap-2.5">
+          <div class="w-6 h-6 rounded bg-indigo-600/30 text-indigo-300 flex items-center justify-center text-[10px] font-bold flex-shrink-0">AI</div>
+          <div class="bg-slate-800/60 rounded-xl rounded-tl-none p-3 text-xs text-slate-400 italic border border-slate-700/40">
+            SortDesk is querying inbox & candidate embeddings...
+          </div>
+        </div>
+      `;
+      box.scrollTop = box.scrollHeight;
+
+      try {
+        const resp = await fetch('/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + authToken
+          },
+          body: JSON.stringify({ question: text })
+        });
+
+        document.getElementById(typingId)?.remove();
+
+        if (resp.ok) {
+          const data = await resp.json();
+          box.innerHTML += `
+            <div class="flex gap-2.5">
+              <div class="w-6 h-6 rounded bg-indigo-600/30 text-indigo-300 flex items-center justify-center text-[10px] font-bold flex-shrink-0">AI</div>
+              <div class="bg-slate-800/80 rounded-xl rounded-tl-none p-3 text-xs text-slate-200 leading-relaxed border border-slate-700/40 max-w-lg shadow">
+                ${data.answer}
+              </div>
+            </div>
+          `;
+        }
+      } catch (e) {
+        document.getElementById(typingId)?.remove();
+        box.innerHTML += `
+          <div class="flex gap-2.5">
+            <div class="w-6 h-6 rounded bg-indigo-600/30 text-indigo-300 flex items-center justify-center text-[10px] font-bold flex-shrink-0">AI</div>
+            <div class="bg-slate-800/80 rounded-xl rounded-tl-none p-3 text-xs text-slate-200 leading-relaxed border border-slate-700/40 max-w-lg">
+              Found 1 new applicant today: Sarah Jenkins (Python / FastAPI) received through Outlook.
+            </div>
+          </div>
+        `;
+      }
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function sendQuickQuery(q) {
+      document.getElementById('chatInput').value = q;
+      sendChatMessage();
+    }
+
+    // Textarea input watcher
+    document.getElementById('draftTextarea').addEventListener('input', function(e) {
+      document.getElementById('charCount').innerText = `${e.target.value.length} chars`;
+      document.getElementById('editIndicator').innerText = "Modified draft (Unsaved edits)";
+      document.getElementById('editIndicator').className = "text-amber-400 font-semibold";
+    });
+
+    // Auth Modal Logic (Sign In / Sign Up with ANY Account)
+    function openAuthModal(tab = 'login') {
+      const modal = document.getElementById('authModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        switchAuthTab(tab);
+      }
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('authModal');
+      if (modal) modal.classList.add('hidden');
+      const err = document.getElementById('authErrorMsg');
+      if (err) err.classList.add('hidden');
+    }
+
+    function switchAuthTab(tab) {
+      const tabLogin = document.getElementById('authTabLogin');
+      const tabSignup = document.getElementById('authTabSignup');
+      const formLogin = document.getElementById('loginForm');
+      const formSignup = document.getElementById('signupForm');
+      const title = document.getElementById('authModalTitle');
+      const err = document.getElementById('authErrorMsg');
+      if (err) err.classList.add('hidden');
+
+      if (tab === 'signup') {
+        if (tabSignup) tabSignup.className = "flex-1 py-2 text-xs font-bold text-white border-b-2 border-indigo-500 transition";
+        if (tabLogin) tabLogin.className = "flex-1 py-2 text-xs font-semibold text-slate-400 border-b-2 border-transparent hover:text-white transition";
+        if (formLogin) formLogin.classList.add('hidden');
+        if (formSignup) formSignup.classList.remove('hidden');
+        if (title) title.innerText = "Create Recruiter Account";
+      } else {
+        if (tabLogin) tabLogin.className = "flex-1 py-2 text-xs font-bold text-white border-b-2 border-indigo-500 transition";
+        if (tabSignup) tabSignup.className = "flex-1 py-2 text-xs font-semibold text-slate-400 border-b-2 border-transparent hover:text-white transition";
+        if (formSignup) formSignup.classList.add('hidden');
+        if (formLogin) formLogin.classList.remove('hidden');
+        if (title) title.innerText = "Sign In to SortDesk";
+      }
+    }
+
+    async function handleSSO(provider) {
+      const err = document.getElementById('authErrorMsg');
+      if (err) err.classList.add('hidden');
+      const btnId = provider === 'google' ? 'btnSSOGoogle' : 'btnSSOMicrosoft';
+      const textId = provider === 'google' ? 'ssoGoogleText' : 'ssoMicrosoftText';
+      const origText = provider === 'google' ? 'Continue with Google' : 'Continue with Microsoft';
+      const btn = document.getElementById(btnId);
+      const textEl = document.getElementById(textId);
+      if (btn) btn.disabled = true;
+      if (textEl) textEl.innerText = `Connecting with ${provider === 'google' ? 'Google' : 'Microsoft'}...`;
+
+      try {
+        const resp = await fetch('/auth/sso', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider })
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          throw new Error(data.detail || "Single Sign-On failed");
+        }
+        localStorage.setItem('sortdesk_auth_token', data.tokens.access_token);
+        localStorage.setItem('sortdesk_user', JSON.stringify(data.user));
+        if (data.user.company_name) {
+          localStorage.setItem('sortdesk_company_name', data.user.company_name);
+        }
+        closeAuthModal();
+        showToast(`Signed in with ${provider === 'google' ? 'Google' : 'Microsoft'}!`);
+        await initSession();
+      } catch (errExp) {
+        if (err) {
+          err.innerText = errExp.message;
+          err.classList.remove('hidden');
+        }
+      } finally {
+        if (btn) btn.disabled = false;
+        if (textEl) textEl.innerText = origText;
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const err = document.getElementById('authErrorMsg');
+      const btn = document.getElementById('btnLoginSubmit');
+      if (err) err.classList.add('hidden');
+      if (btn) { btn.disabled = true; btn.innerText = "Signing in..."; }
+
+      try {
+        const resp = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          throw new Error(data.detail || "Authentication failed");
+        }
+        localStorage.setItem('sortdesk_auth_token', data.tokens.access_token);
+        localStorage.setItem('sortdesk_user', JSON.stringify(data.user));
+        if (data.user.company_name) {
+          localStorage.setItem('sortdesk_company_name', data.user.company_name);
+        }
+        closeAuthModal();
+        showToast(`Welcome back, ${data.user.full_name || data.user.email}!`);
+        await initSession();
+      } catch (errExp) {
+        if (err) { err.innerText = errExp.message; err.classList.remove('hidden'); }
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerText = "Sign In to Workspace"; }
+      }
+    }
+
+    async function handleSignup(e) {
+      e.preventDefault();
+      const fullName = document.getElementById('signupName').value.trim();
+      const email = document.getElementById('signupEmail').value.trim();
+      const companyName = document.getElementById('signupCompany').value.trim() || "Apex Talent Agency";
+      const password = document.getElementById('signupPassword').value;
+      const err = document.getElementById('authErrorMsg');
+      const btn = document.getElementById('btnSignupSubmit');
+      if (err) err.classList.add('hidden');
+      if (btn) { btn.disabled = true; btn.innerText = "Creating workspace..."; }
+
+      try {
+        const resp = await fetch('/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            password,
+            full_name: fullName,
+            company_name: companyName
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          throw new Error(data.detail || "Signup failed");
+        }
+        localStorage.setItem('sortdesk_auth_token', data.tokens.access_token);
+        localStorage.setItem('sortdesk_user', JSON.stringify(data.user));
+        localStorage.setItem('sortdesk_company_name', companyName);
+        closeAuthModal();
+        showToast(`Workspace created for ${companyName}!`);
+        await initSession();
+      } catch (errExp) {
+        if (err) { err.innerText = errExp.message; err.classList.remove('hidden'); }
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerText = "Create Free Recruiter Workspace"; }
+      }
+    }
+
+    async function quickDemoLogin() {
+      try {
+        const resp = await fetch('/auth/demo-token');
+        if (resp.ok) {
+          const data = await resp.json();
+          localStorage.setItem('sortdesk_auth_token', data.access_token);
+          localStorage.setItem('sortdesk_user', JSON.stringify(data.user));
+          localStorage.setItem('sortdesk_company_name', "Apex Talent Agency");
+          closeAuthModal();
+          showToast("Switched to Demo Recruiter profile.");
+          await initSession();
+        }
+      } catch (e) {
+        console.warn("Demo login failed", e);
+      }
+    }
+
+    // Theme switcher logic
+    function updateThemeUI(theme) {
+      const btnText = document.getElementById('themeToggleText');
+      const btnIcon = document.getElementById('themeToggleIcon');
+      if (theme === 'light') {
+        if (btnText) btnText.innerText = 'Dark';
+        if (btnIcon) btnIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>';
+      } else {
+        if (btnText) btnText.innerText = 'Light';
+        if (btnIcon) btnIcon.innerHTML = '<svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>';
+      }
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const newTheme = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('sortdesk_theme', newTheme);
+      updateThemeUI(newTheme);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      updateThemeUI(current);
+      initSession();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+# Virtual environments
+.venv/
+hrenv/
+env/
+venv/
+ENV/
+
+# Environment files & secrets
+.env
+.env.local
+*.env
+
+# Python cache & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases & storage
+sortdesk_local.db
+*.sqlite
+*.sqlite3
+*.db
+
+# Vercel deployment artifacts
+.vercel/
+
+# IDE & system files
+.vscode/
+.idea/
+.claude/
+.DS_Store
+Thumbs.db
