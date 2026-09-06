@@ -1,6 +1,17 @@
+import os
+import sys
 from pathlib import Path
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, RedirectResponse
+
+# Ensure root directory and app directory are on sys.path in serverless runtimes
+_CURRENT_DIR = Path(__file__).resolve().parent
+_ROOT_DIR = _CURRENT_DIR.parent
+for _path in [str(_ROOT_DIR), str(_CURRENT_DIR)]:
+    if _path not in sys.path:
+        sys.path.insert(0, _path)
+
+import traceback
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
@@ -20,6 +31,14 @@ app = FastAPI(
     description="SortDesk: AI-powered Gmail & Outlook agent for HR recruiters",
     version="1.0.0",
 )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    traceback.print_exc()
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Internal Server Error", "detail": str(exc)},
+    )
 
 app.add_middleware(
     CORSMiddleware,
@@ -46,8 +65,11 @@ def _read_template(filename: str) -> str:
         Path(__file__).resolve().parent.parent / "app" / "templates" / filename,
     ]
     for p in possible_paths:
-        if p.exists():
-            return p.read_text(encoding="utf-8")
+        try:
+            if p.exists():
+                return p.read_text(encoding="utf-8")
+        except Exception:
+            pass
     return ""
 
 

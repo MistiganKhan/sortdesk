@@ -5,12 +5,14 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+import sys
+
 def _resolve_db_file() -> Path:
-    if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    # On Linux / Vercel / AWS Lambda / cloud serverless, always use /tmp
+    if sys.platform != "win32" or os.environ.get("VERCEL") or os.environ.get("LAMBDA_TASK_ROOT") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
         return Path("/tmp") / "sortdesk_local.db"
     default_path = Path(__file__).resolve().parent.parent.parent / "sortdesk_local.db"
     try:
-        # Test write access to parent directory
         test_file = default_path.parent / ".write_test"
         test_file.touch(exist_ok=True)
         test_file.unlink(missing_ok=True)
@@ -268,7 +270,15 @@ class LocalDatabaseAdapter:
         self.init_db()
 
     def get_connection(self):
-        return sqlite3.connect(str(self.db_path))
+        try:
+            return sqlite3.connect(str(self.db_path), check_same_thread=False)
+        except Exception:
+            try:
+                self.db_path = Path("/tmp") / "sortdesk_local.db"
+                return sqlite3.connect(str(self.db_path), check_same_thread=False)
+            except Exception:
+                self.db_path = "file:sortdesk_shared?mode=memory&cache=shared"
+                return sqlite3.connect(str(self.db_path), uri=True, check_same_thread=False)
 
     def table(self, table_name: str) -> SQLiteQueryBuilder:
         return SQLiteQueryBuilder(table_name, self)
@@ -301,152 +311,189 @@ class LocalDatabaseAdapter:
         return d
 
     def init_db(self):
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.executescript("""
-            CREATE TABLE IF NOT EXISTS users (
-                id TEXT PRIMARY KEY,
-                email TEXT UNIQUE NOT NULL,
-                full_name TEXT,
-                company_name TEXT,
-                password_hash TEXT,
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP
-            );
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.executescript("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id TEXT PRIMARY KEY,
+                    email TEXT UNIQUE NOT NULL,
+                    full_name TEXT,
+                    company_name TEXT,
+                    password_hash TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
 
-            CREATE TABLE IF NOT EXISTS refresh_tokens (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
-                token_hash TEXT NOT NULL,
-                expires_at TEXT NOT NULL,
-                user_agent TEXT,
-                ip_address TEXT,
-                revoked_at TEXT,
-                replaced_by TEXT,
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP
-            );
+                CREATE TABLE IF NOT EXISTS refresh_tokens (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    token_hash TEXT NOT NULL,
+                    expires_at TEXT NOT NULL,
+                    user_agent TEXT,
+                    ip_address TEXT,
+                    revoked_at TEXT,
+                    replaced_by TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
 
-            CREATE TABLE IF NOT EXISTS gmail_connections (
-                id TEXT PRIMARY KEY,
-                user_id TEXT,
-                gmail_address TEXT NOT NULL,
-                refresh_token TEXT NOT NULL,
-                is_active INTEGER DEFAULT 1,
-                connected_at TEXT DEFAULT CURRENT_TIMESTAMP
-            );
+                CREATE TABLE IF NOT EXISTS gmail_connections (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT,
+                    gmail_address TEXT NOT NULL,
+                    refresh_token TEXT NOT NULL,
+                    is_active INTEGER DEFAULT 1,
+                    connected_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
 
-            CREATE TABLE IF NOT EXISTS outlook_connections (
-                id TEXT PRIMARY KEY,
-                user_id TEXT,
-                outlook_address TEXT NOT NULL,
-                refresh_token TEXT NOT NULL,
-                is_active INTEGER DEFAULT 1,
-                connected_at TEXT DEFAULT CURRENT_TIMESTAMP
-            );
+                CREATE TABLE IF NOT EXISTS outlook_connections (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT,
+                    outlook_address TEXT NOT NULL,
+                    refresh_token TEXT NOT NULL,
+                    is_active INTEGER DEFAULT 1,
+                    connected_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
 
-            CREATE TABLE IF NOT EXISTS emails (
-                id TEXT PRIMARY KEY,
-                user_id TEXT,
-                provider TEXT DEFAULT 'gmail',
-                gmail_message_id TEXT UNIQUE,
-                gmail_thread_id TEXT,
-                outlook_message_id TEXT UNIQUE,
-                outlook_conversation_id TEXT,
-                sender_email TEXT,
-                sender_name TEXT,
-                subject TEXT,
-                body_text TEXT,
-                received_at TEXT,
-                has_attachment INTEGER DEFAULT 0,
-                is_processed INTEGER DEFAULT 0,
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP
-            );
+                CREATE TABLE IF NOT EXISTS emails (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT,
+                    provider TEXT DEFAULT 'gmail',
+                    gmail_message_id TEXT UNIQUE,
+                    gmail_thread_id TEXT,
+                    outlook_message_id TEXT UNIQUE,
+                    outlook_conversation_id TEXT,
+                    sender_email TEXT,
+                    sender_name TEXT,
+                    subject TEXT,
+                    body_text TEXT,
+                    received_at TEXT,
+                    has_attachment INTEGER DEFAULT 0,
+                    is_processed INTEGER DEFAULT 0,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
 
-            CREATE TABLE IF NOT EXISTS email_categories (
-                id TEXT PRIMARY KEY,
-                email_id TEXT,
-                category TEXT NOT NULL,
-                priority TEXT,
-                confidence_score REAL,
-                is_duplicate_question INTEGER DEFAULT 0,
-                matched_job_posting_id TEXT,
-                resolved_at TEXT,
-                classified_at TEXT DEFAULT CURRENT_TIMESTAMP
-            );
+                CREATE TABLE IF NOT EXISTS email_categories (
+                    id TEXT PRIMARY KEY,
+                    email_id TEXT,
+                    category TEXT NOT NULL,
+                    confidence_score REAL,
+                    priority TEXT,
+                    priority_reason TEXT,
+                    is_duplicate_question INTEGER DEFAULT 0,
+                    duplicate_of_id TEXT,
+                    resolved_at TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
 
-            CREATE TABLE IF NOT EXISTS email_drafts (
-                id TEXT PRIMARY KEY,
-                email_id TEXT,
-                draft_body TEXT NOT NULL,
-                status TEXT DEFAULT 'pending',
-                gmail_draft_id TEXT,
-                outlook_message_id TEXT,
-                generated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                approved_at TEXT,
-                sent_at TEXT
-            );
+                CREATE TABLE IF NOT EXISTS email_drafts (
+                    id TEXT PRIMARY KEY,
+                    email_id TEXT,
+                    draft_body TEXT NOT NULL,
+                    status TEXT DEFAULT 'pending',
+                    generated_at TEXT,
+                    approved_at TEXT,
+                    sent_at TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
 
-            CREATE TABLE IF NOT EXISTS draft_corrections (
-                id TEXT PRIMARY KEY,
-                draft_id TEXT,
-                original_text TEXT,
-                corrected_text TEXT,
-                corrected_at TEXT DEFAULT CURRENT_TIMESTAMP
-            );
+                CREATE TABLE IF NOT EXISTS candidates (
+                    id TEXT PRIMARY KEY,
+                    email_id TEXT,
+                    user_id TEXT,
+                    full_name TEXT,
+                    candidate_email TEXT,
+                    role_applied_for TEXT,
+                    skills_extracted TEXT,
+                    resume_file_url TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
 
-            CREATE TABLE IF NOT EXISTS candidates (
-                id TEXT PRIMARY KEY,
-                email_id TEXT,
-                user_id TEXT,
-                full_name TEXT,
-                candidate_email TEXT,
-                role_applied_for TEXT,
-                skills_extracted TEXT,
-                resume_file_url TEXT,
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP
-            );
+                CREATE TABLE IF NOT EXISTS candidate_documents (
+                    id TEXT PRIMARY KEY,
+                    email_id TEXT,
+                    file_url TEXT,
+                    original_filename TEXT,
+                    uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
 
-            CREATE TABLE IF NOT EXISTS candidate_documents (
-                id TEXT PRIMARY KEY,
-                email_id TEXT,
-                file_url TEXT,
-                original_filename TEXT,
-                uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP
-            );
+                CREATE TABLE IF NOT EXISTS chat_messages (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT,
+                    question TEXT,
+                    answer TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
 
-            CREATE TABLE IF NOT EXISTS chat_messages (
-                id TEXT PRIMARY KEY,
-                user_id TEXT,
-                question TEXT,
-                answer TEXT,
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE IF NOT EXISTS job_postings (
-                id TEXT PRIMARY KEY,
-                user_id TEXT,
-                role_title TEXT NOT NULL,
-                posting_text TEXT NOT NULL,
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP
-            );
-            """)
-            # Ensure users table columns exist for existing databases
-            cursor.execute("PRAGMA table_info(users)")
-            cols = [r[1] for r in cursor.fetchall()]
-            if "company_name" not in cols:
-                cursor.execute("ALTER TABLE users ADD COLUMN company_name TEXT")
-            if "password_hash" not in cols:
-                cursor.execute("ALTER TABLE users ADD COLUMN password_hash TEXT")
-            conn.commit()
-
-        self._seed_initial_data()
+                CREATE TABLE IF NOT EXISTS job_postings (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT,
+                    role_title TEXT NOT NULL,
+                    posting_text TEXT NOT NULL,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                );
+                """)
+                cursor.execute("PRAGMA table_info(users)")
+                cols = [r[1] for r in cursor.fetchall()]
+                if "company_name" not in cols:
+                    cursor.execute("ALTER TABLE users ADD COLUMN company_name TEXT")
+                if "password_hash" not in cols:
+                    cursor.execute("ALTER TABLE users ADD COLUMN password_hash TEXT")
+                conn.commit()
+            self._seed_initial_data()
+        except Exception:
+            # Fallback to shared in-memory SQLite if filesystem is read-only
+            self.db_path = "file:sortdesk_shared?mode=memory&cache=shared"
+            try:
+                with self.get_connection() as conn:
+                    cursor = conn.cursor()
+                    cursor.executescript("""
+                    CREATE TABLE IF NOT EXISTS users (
+                        id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, full_name TEXT, company_name TEXT, password_hash TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE TABLE IF NOT EXISTS refresh_tokens (
+                        id TEXT PRIMARY KEY, user_id TEXT NOT NULL, token_hash TEXT NOT NULL, expires_at TEXT NOT NULL, user_agent TEXT, ip_address TEXT, revoked_at TEXT, replaced_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE TABLE IF NOT EXISTS gmail_connections (
+                        id TEXT PRIMARY KEY, user_id TEXT, gmail_address TEXT NOT NULL, refresh_token TEXT NOT NULL, is_active INTEGER DEFAULT 1, connected_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE TABLE IF NOT EXISTS outlook_connections (
+                        id TEXT PRIMARY KEY, user_id TEXT, outlook_address TEXT NOT NULL, refresh_token TEXT NOT NULL, is_active INTEGER DEFAULT 1, connected_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE TABLE IF NOT EXISTS emails (
+                        id TEXT PRIMARY KEY, user_id TEXT, provider TEXT DEFAULT 'gmail', gmail_message_id TEXT UNIQUE, gmail_thread_id TEXT, outlook_message_id TEXT UNIQUE, outlook_conversation_id TEXT, sender_email TEXT, sender_name TEXT, subject TEXT, body_text TEXT, received_at TEXT, has_attachment INTEGER DEFAULT 0, is_processed INTEGER DEFAULT 0, created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE TABLE IF NOT EXISTS email_categories (
+                        id TEXT PRIMARY KEY, email_id TEXT, category TEXT NOT NULL, confidence_score REAL, priority TEXT, priority_reason TEXT, is_duplicate_question INTEGER DEFAULT 0, duplicate_of_id TEXT, resolved_at TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE TABLE IF NOT EXISTS email_drafts (
+                        id TEXT PRIMARY KEY, email_id TEXT, draft_body TEXT NOT NULL, status TEXT DEFAULT 'pending', generated_at TEXT, approved_at TEXT, sent_at TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE TABLE IF NOT EXISTS candidates (
+                        id TEXT PRIMARY KEY, email_id TEXT, user_id TEXT, full_name TEXT, candidate_email TEXT, role_applied_for TEXT, skills_extracted TEXT, resume_file_url TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE TABLE IF NOT EXISTS candidate_documents (
+                        id TEXT PRIMARY KEY, email_id TEXT, file_url TEXT, original_filename TEXT, uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE TABLE IF NOT EXISTS chat_messages (
+                        id TEXT PRIMARY KEY, user_id TEXT, question TEXT, answer TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE TABLE IF NOT EXISTS job_postings (
+                        id TEXT PRIMARY KEY, user_id TEXT, role_title TEXT NOT NULL, posting_text TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    );
+                    """)
+                    conn.commit()
+                self._seed_initial_data()
+            except Exception:
+                pass
 
     def _seed_initial_data(self):
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) FROM emails")
-            count = cursor.fetchone()[0]
-            if count > 0:
-                return
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT COUNT(*) FROM emails")
+                count = cursor.fetchone()[0]
+                if count > 0:
+                    return
 
             demo_user_id = "00000000-0000-0000-0000-000000000001"
             cursor.execute("""
@@ -504,6 +551,8 @@ class LocalDatabaseAdapter:
             """, (cat_2_id, email_2_id))
 
             conn.commit()
+        except Exception:
+            pass
 
 
 _adapter_instance: Optional[LocalDatabaseAdapter] = None
