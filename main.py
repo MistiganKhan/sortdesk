@@ -11,22 +11,86 @@ for p in [str(ROOT_DIR), str(APP_DIR)]:
         sys.path.insert(0, p)
 
 try:
-    from app.main import app
+    from app.main import app as _inner_app
+    _import_err = None
 except Exception as e:
-    _err = traceback.format_exc()
-    print("FATAL ERROR IMPORTING APP.MAIN:\n", _err, file=sys.stderr)
-    from fastapi import FastAPI
-    from fastapi.responses import HTMLResponse
-    app = FastAPI(title="SortDesk Diagnostic Fallback")
+    _inner_app = None
+    _import_err = traceback.format_exc()
+    print("IMPORT ERROR IN MAIN.PY:", _import_err, file=sys.stderr)
 
-    @app.api_route("/{full_path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"])
-    async def _diagnostic_fallback(full_path: str = ""):
-        return HTMLResponse(
-            f"<html><body style='background:#18181b;color:#f43f5e;font-family:monospace;padding:30px;'>"
-            f"<h2>SortDesk Startup Import Error</h2><pre style='background:#27272a;color:#fecdd3;padding:20px;border-radius:8px;'>{_err}</pre></body></html>",
-            status_code=200
-        )
 
+class RobustASGIApp:
+    def __init__(self, inner):
+        self.inner = inner
+
+    async def __call__(self, scope, receive, send):
+        if _import_err:
+            if scope.get("type") == "http":
+                body = (
+                    f"<html><body style='background:#111;color:#ff5555;font-family:monospace;padding:24px;'>"
+                    f"<h2>SortDesk Import Error</h2>"
+                    f"<pre>{_import_err}</pre>"
+                    f"</body></html>"
+                ).encode("utf-8")
+                await send({
+                    "type": "http.response.start",
+                    "status": 200,
+                    "headers": [
+                        (b"content-type", b"text/html; charset=utf-8"),
+                        (b"content-length", str(len(body)).encode("ascii")),
+                    ],
+                })
+                await send({
+                    "type": "http.response.body",
+                    "body": body,
+                })
+            return
+
+        if scope.get("type") == "http" and scope.get("path") == "/_ping":
+            body = b'{"status":"pong","message":"SortDesk serverless runner is live"}'
+            await send({
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [
+                    (b"content-type", b"application/json"),
+                    (b"content-length", str(len(body)).encode("ascii")),
+                ],
+            })
+            await send({
+                "type": "http.response.body",
+                "body": body,
+            })
+            return
+
+        try:
+            await self.inner(scope, receive, send)
+        except Exception as exc:
+            err = traceback.format_exc()
+            print("CRITICAL ASGI RUNTIME ERROR:\n", err, file=sys.stderr)
+            if scope.get("type") == "http":
+                body = (
+                    f"<html><body style='background:#111;color:#ff5555;font-family:monospace;padding:24px;'>"
+                    f"<h2>SortDesk ASGI Runtime Error</h2>"
+                    f"<pre>{err}</pre>"
+                    f"</body></html>"
+                ).encode("utf-8")
+                await send({
+                    "type": "http.response.start",
+                    "status": 200,
+                    "headers": [
+                        (b"content-type", b"text/html; charset=utf-8"),
+                        (b"content-length", str(len(body)).encode("ascii")),
+                    ],
+                })
+                await send({
+                    "type": "http.response.body",
+                    "body": body,
+                })
+            else:
+                raise
+
+
+app = RobustASGIApp(_inner_app)
 __all__ = ["app"]
 
 if __name__ == "__main__":
