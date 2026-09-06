@@ -39,6 +39,16 @@
       document.documentElement.setAttribute('data-theme', savedTheme);
     })();
   </script>
+  <script>
+    // Immediate authentication guard: redirect unauthenticated users to landing page
+    (function() {
+      const token = localStorage.getItem('sortdesk_auth_token');
+      if (!token) {
+        window.location.replace('/?auth_required=true');
+      }
+    })();
+  </script>
+
   <style>
     body { background-color: #0b0f19; color: #f1f5f9; transition: background-color 0.2s ease, color 0.2s ease; }
     .glass-card {
@@ -842,52 +852,47 @@ Sophia Martinez</textarea>
       setTimeout(() => toast.classList.add('hidden'), 3500);
     }
 
-    // Boot & Init Session (Supports Any Account & Demo Mode)
+    // Boot & Init Session (Requires Valid Recruiter Authentication)
     async function initSession() {
+      const storedToken = localStorage.getItem('sortdesk_auth_token');
+      if (!storedToken) {
+        window.location.replace('/?auth_required=true');
+        return;
+      }
+
       const urlParams = new URLSearchParams(window.location.search);
       let company = urlParams.get('company') || localStorage.getItem('sortdesk_company_name') || 'Apex Talent Agency';
       
-      const storedToken = localStorage.getItem('sortdesk_auth_token');
       let authenticated = false;
-
-      if (storedToken) {
-        try {
-          const meResp = await fetch('/auth/me', {
-            headers: { 'Authorization': 'Bearer ' + storedToken }
-          });
-          if (meResp.ok) {
-            const user = await meResp.json();
-            authToken = storedToken;
-            authenticated = true;
-            document.getElementById('sessionBadge').classList.remove('hidden');
-            document.getElementById('sessionText').innerText = `${user.full_name || user.email}`;
-            if (user.company_name) {
-              company = user.company_name;
-            }
-            if (document.getElementById('headerAuthBtn')) {
-              document.getElementById('headerAuthBtn').innerHTML = `<button onclick="logoutUser()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">Log Out</button>`;
-            }
+      try {
+        const meResp = await fetch('/auth/me', {
+          headers: { 'Authorization': 'Bearer ' + storedToken }
+        });
+        if (meResp.ok) {
+          const user = await meResp.json();
+          authToken = storedToken;
+          authenticated = true;
+          document.getElementById('sessionBadge').classList.remove('hidden');
+          document.getElementById('sessionText').innerText = `${user.full_name || user.email}`;
+          if (user.company_name) {
+            company = user.company_name;
           }
-        } catch (e) {
-          console.warn("Stored auth token validation error:", e);
-        }
-      }
-
-      if (!authenticated) {
-        try {
-          const resp = await fetch('/auth/demo-token');
-          if (resp.ok) {
-            const data = await resp.json();
-            authToken = data.access_token;
-            document.getElementById('sessionBadge').classList.remove('hidden');
-            document.getElementById('sessionText').innerText = "Demo Recruiter (SortDesk)";
-            if (document.getElementById('headerAuthBtn')) {
-              document.getElementById('headerAuthBtn').innerHTML = `<button onclick="openAuthModal('login')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/10 transition">Sign In / Sign Up</button>`;
-            }
+          if (document.getElementById('headerAuthBtn')) {
+            document.getElementById('headerAuthBtn').innerHTML = `<button onclick="logoutUser()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">Log Out</button>`;
           }
-        } catch (e) {
-          console.warn("Demo token fetch failed:", e);
+        } else {
+          // Token expired or invalid
+          localStorage.removeItem('sortdesk_auth_token');
+          localStorage.removeItem('sortdesk_user');
+          window.location.replace('/?session_expired=true');
+          return;
         }
+      } catch (e) {
+        console.warn("Stored auth token validation error:", e);
+        localStorage.removeItem('sortdesk_auth_token');
+        localStorage.removeItem('sortdesk_user');
+        window.location.replace('/?auth_required=true');
+        return;
       }
 
       if (document.getElementById('companyNameDisplay')) {
@@ -898,11 +903,22 @@ Sophia Martinez</textarea>
       await refreshData();
     }
 
-    function logoutUser() {
+    async function logoutUser() {
+      const storedToken = localStorage.getItem('sortdesk_auth_token');
+      try {
+        if (storedToken) {
+          await fetch('/auth/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + storedToken },
+            body: JSON.stringify({ refresh_token: storedToken })
+          });
+        }
+      } catch (e) {}
+
       localStorage.removeItem('sortdesk_auth_token');
       localStorage.removeItem('sortdesk_user');
-      showToast("Logged out from workspace. Demo mode active.", "");
-      initSession();
+      localStorage.removeItem('sortdesk_company_name');
+      window.location.replace('/?logged_out=true');
     }
 
     // Fetch all live data

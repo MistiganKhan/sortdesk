@@ -792,10 +792,23 @@
       }
     }
 
-    function logoutUser() {
+    async function logoutUser() {
+      const token = localStorage.getItem('sortdesk_auth_token');
+      try {
+        if (token) {
+          await fetch('/auth/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ refresh_token: token })
+          });
+        }
+      } catch (e) {}
+
       localStorage.removeItem('sortdesk_auth_token');
       localStorage.removeItem('sortdesk_user');
+      localStorage.removeItem('sortdesk_company_name');
       checkAuthState();
+      window.location.replace('/?logged_out=true');
     }
 
     function openAuthModal(tab = 'login') {
@@ -946,12 +959,34 @@
       const current = document.documentElement.getAttribute('data-theme') || 'light';
       updateThemeUI(current);
       checkAuthState();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('auth_required') === 'true') {
+        openAuthModal('login');
+        const err = document.getElementById('authErrorMsg');
+        if (err) {
+          err.innerText = "Please sign in to access your recruiter workspace.";
+          err.classList.remove('hidden');
+        }
+      } else if (urlParams.get('session_expired') === 'true') {
+        openAuthModal('login');
+        const err = document.getElementById('authErrorMsg');
+        if (err) {
+          err.innerText = "Your session has expired. Please sign in again.";
+          err.classList.remove('hidden');
+        }
+      }
     });
 
     function goToDashboard() {
       const company = document.getElementById('companyInput').value.trim() || "Apex Talent Agency";
       localStorage.setItem('sortdesk_company_name', company);
-      window.location.href = `/dashboard?company=${encodeURIComponent(company)}`;
+      const token = localStorage.getItem('sortdesk_auth_token');
+      if (token) {
+        window.location.href = `/dashboard?company=${encodeURIComponent(company)}`;
+      } else {
+        openAuthModal('signup');
+      }
     }
   </script>
 </body>
