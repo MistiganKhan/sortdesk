@@ -3,6 +3,19 @@ name = "sortdesk"
 version = "1.0.0"
 description = "SortDesk - AI-powered recruitment email assistant"
 requires-python = ">=3.12"
+dependencies = [
+    "fastapi==0.115.0",
+    "uvicorn==0.30.6",
+    "pydantic==2.11.7",
+    "pydantic-settings==2.7.0",
+    "python-multipart==0.0.9",
+    "email-validator==2.2.0",
+    "httpx==0.27.2",
+    "PyJWT==2.12.0",
+    "cryptography==43.0.1",
+    "python-dotenv==1.2.2",
+    "supabase==2.31.0",
+]
 
 [tool.vercel]
 entrypoint = "index:app"
