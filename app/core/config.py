@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
     FRONTEND_OAUTH_SUCCESS_PATH: str = "/auth/callback"
 
+    # AI & LLM Providers
+    GROQ_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
+    HF_TOKEN: str = ""
+    PUBSUB_TOPIC: str = ""
+
     ENVIRONMENT: str = "development"  # development | staging | production
 
     @field_validator("ACCESS_TOKEN_EXPIRE_MINUTES", mode="before")

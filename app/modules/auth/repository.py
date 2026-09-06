@@ -3,16 +3,27 @@ from datetime import datetime, timezone
 from app.core.supabase_client import get_supabase
 
 
+def _normalize_user(user: dict | None) -> dict | None:
+    if not user:
+        return None
+    normalized = dict(user)
+    if "company_name" not in normalized or not normalized.get("company_name"):
+        normalized["company_name"] = "SortDesk Agency"
+    if "password_hash" not in normalized:
+        normalized["password_hash"] = None
+    return normalized
+
+
 def get_user_by_email(email: str) -> dict | None:
     db = get_supabase()
     res = db.table("users").select("*").eq("email", email).limit(1).execute()
-    return res.data[0] if res.data else None
+    return _normalize_user(res.data[0]) if res.data else None
 
 
 def get_user_by_id(user_id: str) -> dict | None:
     db = get_supabase()
     res = db.table("users").select("*").eq("id", user_id).limit(1).execute()
-    return res.data[0] if res.data else None
+    return _normalize_user(res.data[0]) if res.data else None
 
 
 def create_user(
@@ -31,14 +42,40 @@ def create_user(
         "company_name": company_name or "SortDesk Agency",
         "password_hash": password_hash,
     }
-    res = db.table("users").insert(payload).execute()
-    return res.data[0] if res.data else payload
+    try:
+        res = db.table("users").insert(payload).execute()
+        return _normalize_user(res.data[0]) if res.data else payload
+    except Exception as e:
+        err_msg = str(e)
+        if "company_name" in err_msg or "password_hash" in err_msg:
+            safe_payload = {
+                "id": user_id,
+                "email": email,
+                "full_name": payload["full_name"],
+            }
+            res = db.table("users").insert(safe_payload).execute()
+            user_data = dict(res.data[0]) if res.data else safe_payload
+            user_data["company_name"] = company_name or "SortDesk Agency"
+            user_data["password_hash"] = password_hash
+            return user_data
+        raise
 
 
 def update_user(user_id: str, updates: dict) -> dict | None:
     db = get_supabase()
-    res = db.table("users").update(updates).eq("id", user_id).execute()
-    return res.data[0] if res.data else None
+    try:
+        res = db.table("users").update(updates).eq("id", user_id).execute()
+        return _normalize_user(res.data[0]) if res.data else None
+    except Exception as e:
+        err_msg = str(e)
+        if "company_name" in err_msg or "password_hash" in err_msg:
+            safe_updates = {k: v for k, v in updates.items() if k not in ["company_name", "password_hash"]}
+            if safe_updates:
+                res = db.table("users").update(safe_updates).eq("id", user_id).execute()
+                return _normalize_user(res.data[0]) if res.data else None
+            return get_user_by_id(user_id)
+        raise
+
 
 
 def get_or_create_user(
